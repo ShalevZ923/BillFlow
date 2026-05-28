@@ -298,6 +298,27 @@ Data flow:
 - AI reads summarized bill/dashboard data once daily for insights.
 - AI Fill reads user-provided text and returns suggested form fields for review.
 
+## Tech Stack
+
+The MVP should use a single TypeScript SaaS stack:
+
+- App framework: Next.js App Router with TypeScript.
+- Hosting: Vercel.
+- UI: Tailwind CSS, shadcn/ui-style components, lucide icons, and Recharts.
+- Forms and validation: React Hook Form and Zod.
+- Auth: Supabase Auth for email/password and Google login.
+- Database: Supabase Postgres.
+- ORM and migrations: Drizzle ORM.
+- Payments: Stripe Checkout and Stripe Billing webhooks for Free and Pro subscription state.
+- AI: OpenAI API with structured outputs for daily insights and AI Fill.
+- Email: Resend for reminder emails.
+- Browser push: Web Push API with VAPID keys.
+- Scheduled jobs: Vercel Cron route handlers for recurrence generation, reminders, exchange-rate refresh, and daily AI insights.
+- CSV: Papa Parse for import and export.
+- Testing: Vitest, React Testing Library, and Playwright.
+
+This stack keeps the MVP in one repository, supports a dashboard-heavy SaaS UI, avoids custom authentication infrastructure, and gives hosted paths for payments, AI, email, and scheduled jobs without adding a separate backend service too early.
+
 ## Error Handling
 
 - Forms show inline validation for required fields, invalid amounts, invalid dates, unsupported currencies, and invalid cycle settings.
