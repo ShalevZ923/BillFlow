@@ -12,4 +12,11 @@ describe("getEnv", () => {
   it("rejects invalid urls", () => {
     expect(() => getEnv({ NEXT_PUBLIC_APP_URL: "not-a-url" })).toThrow();
   });
+
+  it("treats blank optional strings as absent", () => {
+    const env = getEnv({ NEXT_PUBLIC_SUPABASE_URL: "", DATABASE_URL: "" });
+
+    expect(env.NEXT_PUBLIC_SUPABASE_URL).toBeUndefined();
+    expect(env.DATABASE_URL).toBeUndefined();
+  });
 });
