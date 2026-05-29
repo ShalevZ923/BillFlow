@@ -34,7 +34,7 @@ export default function SettingsPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium">Default Currency</label>
               <select
-                className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
               >

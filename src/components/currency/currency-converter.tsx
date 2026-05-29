@@ -57,7 +57,7 @@ export function CurrencyConverter() {
         <div>
           <label className="mb-1.5 block text-sm font-medium">From</label>
           <select
-            className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           >

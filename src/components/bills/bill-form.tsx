@@ -100,7 +100,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           </label>
           <select
             id="currency"
-            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             {...register("currency")}
           >
             {currencyOptions.map((c) => (
@@ -129,7 +129,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           </label>
           <select
             id="cycle"
-            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             {...register("cycle")}
           >
             <option value="one-time">One-time</option>
@@ -171,7 +171,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           </label>
           <select
             id="priority"
-            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             {...register("priority")}
           >
             {billPriorities.map((p) => (
@@ -188,7 +188,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           </label>
           <select
             id="status"
-            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             {...register("status")}
           >
             <option value="unpaid">Unpaid</option>
@@ -215,7 +215,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <textarea
             id="notes"
             rows={3}
-            className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             placeholder="Optional notes"
             {...register("notes")}
           />

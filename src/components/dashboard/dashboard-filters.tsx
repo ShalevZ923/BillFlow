@@ -50,7 +50,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
       </div>
 
       <select
-        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
         value={filters.status ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -67,7 +67,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
       </select>
 
       <select
-        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
         value={filters.priority ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -85,7 +85,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
 
       {categories.length > 0 && (
         <select
-          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
           value={filters.category ?? ""}
           onChange={(e) =>
             onFilterChange({ ...filters, category: e.target.value || null })
@@ -102,7 +102,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
 
       {tags.length > 0 && (
         <select
-          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
           value={filters.tag ?? ""}
           onChange={(e) =>
             onFilterChange({ ...filters, tag: e.target.value || null })

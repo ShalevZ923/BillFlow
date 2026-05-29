@@ -8,7 +8,7 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 export function Card({ className, ...props }: CardProps) {
   return (
     <div
-      className={clsx("rounded-lg border border-border bg-white p-5 shadow-sm", className)}
+      className={clsx("rounded-lg border border-border bg-white p-5 shadow-xs", className)}
       {...props}
     />
   );

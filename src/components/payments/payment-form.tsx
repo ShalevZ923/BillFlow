@@ -83,7 +83,7 @@ export function PaymentForm({
           </label>
           <select
             id="method"
-            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             {...register("method")}
           >
             <option value="card">Card</option>

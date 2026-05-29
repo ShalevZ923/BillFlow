@@ -86,7 +86,7 @@ export default function ImportExportPage() {
           ) : (
             <>
               <textarea
-                className="mb-4 h-32 w-full rounded-md border border-border bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="mb-4 h-32 w-full rounded-md border border-border bg-white p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
                 placeholder="Paste CSV content or upload a file..."
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}

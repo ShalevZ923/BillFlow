@@ -10,7 +10,7 @@ export function Input({ className, error, ...props }: InputProps) {
     <div>
       <input
         className={clsx(
-          "h-10 w-full rounded-md border bg-white px-3 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20",
+          "h-10 w-full rounded-md border bg-white px-3 text-sm text-foreground placeholder:text-muted/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20",
           error ? "border-destructive" : "border-border",
           className
         )}

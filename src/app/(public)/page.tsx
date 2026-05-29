@@ -47,7 +47,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
               <p className="text-sm font-medium text-muted">Open receivables</p>

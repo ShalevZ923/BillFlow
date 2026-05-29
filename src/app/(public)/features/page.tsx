@@ -73,7 +73,7 @@ export default function Features() {
             return (
               <article
                 key={feature.title}
-                className="rounded-lg border border-border bg-white p-5 text-left shadow-sm"
+                className="rounded-lg border border-border bg-white p-5 text-left shadow-xs"
               >
                 <Icon aria-hidden="true" className="text-primary" size={22} />
                 <h3 className="mt-3 text-base font-semibold">{feature.title}</h3>
