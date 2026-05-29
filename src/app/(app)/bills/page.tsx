@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BillForm } from "@/components/bills/bill-form";
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -78,7 +78,7 @@ export default function BillsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Bills</h1>
-          <p className="mt-1 text-sm text-muted">Manage your recurring and one-time bills.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Manage your recurring and one-time bills.</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
           <Plus size={16} />
@@ -88,7 +88,9 @@ export default function BillsPage() {
 
       {showForm && (
         <Card className="mt-6">
-          <BillForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          <CardContent>
+            <BillForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          </CardContent>
         </Card>
       )}
 

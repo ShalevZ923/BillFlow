@@ -9,6 +9,8 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { AiInsightCard } from "@/components/dashboard/ai-insight-card";
 import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
 const mockBills: BillListItem[] = [
@@ -103,6 +105,8 @@ type FilterState = {
 
 export default function DashboardPage() {
   const [currency, setCurrency] = useState("USD");
+  const [period, setPeriod] = useState("overview");
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: null,
@@ -132,30 +136,51 @@ export default function DashboardPage() {
     return true;
   });
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">{today}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{today}</p>
         </div>
         <div className="flex items-center gap-3">
           <DashboardCurrencySelector value={currency} onChange={setCurrency} />
         </div>
       </div>
 
-      <div className="mt-6">
-        <SummaryCards
-          monthlyObligationsCents={292050}
-          yearlyProjectionCents={3504600}
-          pendingCount={2}
-          pendingAmountCents={292050}
-          overdueCount={1}
-          overdueAmountCents={8400}
-        />
-      </div>
+      <Tabs value={period} onValueChange={setPeriod} className="mt-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="month">This Month</TabsTrigger>
+          <TabsTrigger value="year">This Year</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {loading ? (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[88px] rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6">
+          <SummaryCards
+            monthlyObligationsCents={292050}
+            yearlyProjectionCents={3504600}
+            pendingCount={2}
+            pendingAmountCents={292050}
+            overdueCount={1}
+            overdueAmountCents={8400}
+          />
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <CategoryChart categoryTotals={categoryTotals} />
@@ -170,19 +195,21 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-4 text-lg font-semibold">All Bills</h2>
-        <div className="mb-4">
-          <DashboardFilters
-            filters={filters}
-            categories={categories}
-            tags={tags}
-            onFilterChange={setFilters}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold">All Bills</h2>
+        </div>
+        <DashboardFilters
+          filters={filters}
+          categories={categories}
+          tags={tags}
+          onFilterChange={setFilters}
+        />
+        <div className="mt-4">
+          <BillList
+            bills={filteredBills}
+            emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
           />
         </div>
-        <BillList
-          bills={filteredBills}
-          emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
-        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { monthlyToYearly, yearlyToMonthly, percentageChange } from "@/lib/calculator/financial";
 
@@ -22,57 +22,63 @@ export function CalculatorPanel() {
         <CardHeader>
           <CardTitle>Monthly to Yearly</CardTitle>
         </CardHeader>
-        <Input
-          className="mb-2"
-          placeholder="Monthly amount"
-          value={monthly}
-          onChange={(e) => setMonthly(e.target.value)}
-        />
-        {monthlyCents > 0 && (
-          <p className="text-lg font-bold text-primary">
-            ${(monthlyToYearly(monthlyCents) / 100).toFixed(2)}/year
-          </p>
-        )}
+        <CardContent>
+          <Input
+            className="mb-2"
+            placeholder="Monthly amount"
+            value={monthly}
+            onChange={(e) => setMonthly(e.target.value)}
+          />
+          {monthlyCents > 0 && (
+            <p className="text-lg font-bold text-primary">
+              ${(monthlyToYearly(monthlyCents) / 100).toFixed(2)}/year
+            </p>
+          )}
+        </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Yearly to Monthly</CardTitle>
         </CardHeader>
-        <Input
-          className="mb-2"
-          placeholder="Yearly amount"
-          value={yearly}
-          onChange={(e) => setYearly(e.target.value)}
-        />
-        {yearlyCents > 0 && (
-          <p className="text-lg font-bold text-primary">
-            ${(yearlyToMonthly(yearlyCents) / 100).toFixed(2)}/month
-          </p>
-        )}
+        <CardContent>
+          <Input
+            className="mb-2"
+            placeholder="Yearly amount"
+            value={yearly}
+            onChange={(e) => setYearly(e.target.value)}
+          />
+          {yearlyCents > 0 && (
+            <p className="text-lg font-bold text-primary">
+              ${(yearlyToMonthly(yearlyCents) / 100).toFixed(2)}/month
+            </p>
+          )}
+        </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>% Change</CardTitle>
         </CardHeader>
-        <div className="flex gap-2 mb-2">
-          <Input
-            placeholder="Old amount"
-            value={oldAmount}
-            onChange={(e) => setOldAmount(e.target.value)}
-          />
-          <Input
-            placeholder="New amount"
-            value={newAmount}
-            onChange={(e) => setNewAmount(e.target.value)}
-          />
-        </div>
-        {oldCents > 0 && (
-          <p className="text-lg font-bold text-primary">
-            {percentageChange(oldCents, newCents)}%
-          </p>
-        )}
+        <CardContent>
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Old amount"
+              value={oldAmount}
+              onChange={(e) => setOldAmount(e.target.value)}
+            />
+            <Input
+              placeholder="New amount"
+              value={newAmount}
+              onChange={(e) => setNewAmount(e.target.value)}
+            />
+          </div>
+          {oldCents > 0 && (
+            <p className="text-lg font-bold text-primary">
+              {percentageChange(oldCents, newCents)}%
+            </p>
+          )}
+        </CardContent>
       </Card>
     </div>
   );

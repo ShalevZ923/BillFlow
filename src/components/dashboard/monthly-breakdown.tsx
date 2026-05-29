@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip
 } from "recharts";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 type MonthlyBreakdownProps = {
   monthlyBreakdown: Array<{ month: string; amountCents: number }>;
@@ -26,9 +26,11 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
         <CardHeader>
           <CardTitle>Monthly Cost Breakdown</CardTitle>
         </CardHeader>
-        <div className="flex h-64 items-center justify-center text-sm text-muted">
-          No data yet
-        </div>
+        <CardContent>
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+            No data yet
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -39,7 +41,9 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
         <CardHeader>
           <CardTitle>Monthly Cost Breakdown</CardTitle>
         </CardHeader>
-        <div className="h-64" />
+        <CardContent>
+          <div className="h-64" />
+        </CardContent>
       </Card>
     );
   }
@@ -54,17 +58,22 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
       <CardHeader>
         <CardTitle>Monthly Cost Breakdown</CardTitle>
       </CardHeader>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(value) => `$${value}`} />
-            <Bar dataKey="amount" fill="#0d9488" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <CardContent>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                formatter={(value) => `$${value}`}
+              />
+              <Bar dataKey="amount" fill="#0d9488" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
     </Card>
   );
 }

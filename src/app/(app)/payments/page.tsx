@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PaymentForm, type PaymentFormValues } from "@/components/payments/payment-form";
 import { PaymentHistoryTable, type PaymentRecord } from "@/components/payments/payment-history-table";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -64,7 +64,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Payments</h1>
-          <p className="mt-1 text-sm text-muted">Record and view payment history.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Record and view payment history.</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
           <Plus size={16} />
@@ -74,7 +74,9 @@ export default function PaymentsPage() {
 
       {showForm && (
         <Card className="mt-6">
-          <PaymentForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          <CardContent>
+            <PaymentForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          </CardContent>
         </Card>
       )}
 

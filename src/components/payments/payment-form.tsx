@@ -60,9 +60,9 @@ export function PaymentForm({
           <Input
             id="paidAmount"
             placeholder="99.99"
-            error={errors.paidAmount?.message}
             {...register("paidAmount")}
           />
+          {errors.paidAmount && <p className="mt-1 text-sm text-destructive">{errors.paidAmount.message}</p>}
         </div>
 
         <div>
@@ -72,9 +72,9 @@ export function PaymentForm({
           <Input
             id="paidDate"
             type="date"
-            error={errors.paidDate?.message}
             {...register("paidDate")}
           />
+          {errors.paidDate && <p className="mt-1 text-sm text-destructive">{errors.paidDate.message}</p>}
         </div>
 
         <div>

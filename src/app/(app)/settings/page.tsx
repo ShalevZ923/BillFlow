@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { currencyOptions } from "@/lib/currency/supported";
@@ -18,7 +25,7 @@ export default function SettingsPage() {
     <div>
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-1 text-sm text-muted">Manage your profile and preferences.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your profile and preferences.</p>
       </div>
 
       <div className="mt-6 space-y-6">
@@ -26,33 +33,37 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Profile</CardTitle>
           </CardHeader>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Name</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Default Currency</label>
+                <Select value={currency} onValueChange={(v) => v && setCurrency(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyOptions.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.code} ({c.symbol})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">Default Currency</label>
-              <select
-                className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-              >
-                {currencyOptions.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.code} ({c.symbol})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Reminders</CardTitle>
           </CardHeader>
-          <div className="space-y-3">
+          <CardContent>
+            <div className="space-y-3">
             <label className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -72,21 +83,24 @@ export default function SettingsPage() {
               <span className="text-sm">Browser push notifications</span>
             </label>
           </div>
+          </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Billing</CardTitle>
           </CardHeader>
-          <p className="mb-3 text-sm text-muted">
-            Manage your subscription plan.
-          </p>
-          <Link href="/settings/billing">
-            <Button variant="secondary">
-              Billing settings
-              <ArrowRight size={14} />
-            </Button>
-          </Link>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Manage your subscription plan.
+            </p>
+            <Link href="/settings/billing">
+              <Button variant="outline">
+                Billing settings
+                <ArrowRight size={14} />
+              </Button>
+            </Link>
+          </CardContent>
         </Card>
       </div>
     </div>

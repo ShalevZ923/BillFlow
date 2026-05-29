@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { currencyOptions } from "@/lib/currency/supported";
 import { ArrowRight, RefreshCw } from "lucide-react";
 
@@ -79,7 +79,7 @@ export function CurrencyConverter() {
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-lg font-semibold">Results</h3>
             {lastUpdated && (
-              <span className="text-xs text-muted">
+              <span className="text-xs text-muted-foreground">
                 Rates updated: {new Date(lastUpdated).toLocaleString()}
               </span>
             )}
@@ -87,18 +87,20 @@ export function CurrencyConverter() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((r) => (
               <Card key={r.currency}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">
-                      {currencyOptions.find((c) => c.code === r.currency)?.label ?? r.currency}
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {currencyOptions.find((c) => c.code === r.currency)?.label ?? r.currency}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{r.currency}</p>
+                    </div>
+                    <ArrowRight size={16} className="text-muted-foreground" />
+                    <p className="text-lg font-bold">
+                      {(r.amountCents / 100).toFixed(2)}
                     </p>
-                    <p className="text-xs text-muted">{r.currency}</p>
                   </div>
-                  <ArrowRight size={16} className="text-muted" />
-                  <p className="text-lg font-bold">
-                    {(r.amountCents / 100).toFixed(2)}
-                  </p>
-                </div>
+                </CardContent>
               </Card>
             ))}
           </div>

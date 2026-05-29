@@ -26,7 +26,7 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
   if (payments.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-white p-12 text-center">
-        <p className="text-muted">No payment records yet. Record a payment to track paid bills.</p>
+        <p className="text-muted-foreground">No payment records yet. Record a payment to track paid bills.</p>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-white">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-border bg-background text-xs font-medium uppercase text-muted">
+        <thead className="border-b border-border bg-background text-xs font-medium uppercase text-muted-foreground">
           <tr>
             <th className="px-4 py-3">Bill</th>
             <th className="px-4 py-3">Category</th>
@@ -49,18 +49,18 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
           {payments.map((payment) => (
             <tr key={payment.id} className="hover:bg-background/50">
               <td className="px-4 py-3 font-medium">{payment.billName}</td>
-              <td className="px-4 py-3 text-muted">{payment.category}</td>
+              <td className="px-4 py-3 text-muted-foreground">{payment.category}</td>
               <td className="px-4 py-3 font-semibold">
                 {payment.paidCurrency} {formatCents(payment.paidAmountCents)}
               </td>
-              <td className="px-4 py-3 text-muted">{payment.paidDate}</td>
+              <td className="px-4 py-3 text-muted-foreground">{payment.paidDate}</td>
               <td className="px-4 py-3">
                 <Badge>{payment.method}</Badge>
               </td>
               <td className="px-4 py-3">
                 <Badge variant="success">{payment.status}</Badge>
               </td>
-              <td className="px-4 py-3 text-muted max-w-[200px] truncate">
+              <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">
                 {payment.note || "-"}
               </td>
             </tr>

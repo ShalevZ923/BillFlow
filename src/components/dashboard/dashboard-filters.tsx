@@ -2,6 +2,13 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
@@ -20,16 +27,14 @@ type DashboardFiltersProps = {
   onFilterChange: (filters: DashboardFilterState) => void;
 };
 
-const statusOptions: Array<{ label: string; value: OccurrenceStatus | null }> = [
-  { label: "All", value: null },
+const statusOptions: Array<{ label: string; value: OccurrenceStatus }> = [
   { label: "Unpaid", value: "unpaid" },
   { label: "Paid", value: "paid" },
   { label: "Overdue", value: "overdue" },
   { label: "Skipped", value: "skipped" }
 ];
 
-const priorityOptions: Array<{ label: string; value: BillPriority | null }> = [
-  { label: "All", value: null },
+const priorityOptions: Array<{ label: string; value: BillPriority }> = [
   { label: "Critical", value: "critical" },
   { label: "High", value: "high" },
   { label: "Medium", value: "medium" },
@@ -40,7 +45,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative w-64">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
           placeholder="Search bills..."
@@ -49,72 +54,90 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
         />
       </div>
 
-      <select
-        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-        value={filters.status ?? ""}
-        onChange={(e) =>
+      <Select
+        value={filters.status ?? "all"}
+        onValueChange={(value) =>
           onFilterChange({
             ...filters,
-            status: (e.target.value || null) as OccurrenceStatus | null
+            status: value === "all" ? null : (value as OccurrenceStatus)
           })
         }
       >
-        {statusOptions.map((opt) => (
-          <option key={opt.label} value={opt.value ?? ""}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="w-[130px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          {statusOptions.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <select
-        className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-        value={filters.priority ?? ""}
-        onChange={(e) =>
+      <Select
+        value={filters.priority ?? "all"}
+        onValueChange={(value) =>
           onFilterChange({
             ...filters,
-            priority: (e.target.value || null) as BillPriority | null
+            priority: value === "all" ? null : (value as BillPriority)
           })
         }
       >
-        {priorityOptions.map((opt) => (
-          <option key={opt.label} value={opt.value ?? ""}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="w-[130px]">
+          <SelectValue placeholder="Priority" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Priority</SelectItem>
+          {priorityOptions.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {categories.length > 0 && (
-        <select
-          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-          value={filters.category ?? ""}
-          onChange={(e) =>
-            onFilterChange({ ...filters, category: e.target.value || null })
+        <Select
+          value={filters.category ?? "all"}
+          onValueChange={(value) =>
+            onFilterChange({ ...filters, category: value === "all" ? null : value })
           }
         >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {tags.length > 0 && (
-        <select
-          className="h-10 rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-          value={filters.tag ?? ""}
-          onChange={(e) =>
-            onFilterChange({ ...filters, tag: e.target.value || null })
+        <Select
+          value={filters.tag ?? "all"}
+          onValueChange={(value) =>
+            onFilterChange({ ...filters, tag: value === "all" ? null : value })
           }
         >
-          <option value="">All Tags</option>
-          {tags.map((tag) => (
-            <option key={tag} value={tag}>
-              {tag}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tags</SelectItem>
+            {tags.map((tag) => (
+              <SelectItem key={tag} value={tag}>
+                {tag}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {(filters.search || filters.status || filters.category || filters.tag || filters.priority) && (

@@ -13,10 +13,10 @@ export function PublicHeader() {
             BillFlow
           </Link>
           <nav className="hidden gap-6 md:flex">
-            <Link className="text-sm text-muted transition hover:text-foreground" href="/features">
+            <Link className="text-sm text-muted-foreground transition hover:text-foreground" href="/features">
               Features
             </Link>
-            <Link className="text-sm text-muted transition hover:text-foreground" href="/pricing">
+            <Link className="text-sm text-muted-foreground transition hover:text-foreground" href="/pricing">
               Pricing
             </Link>
           </nav>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, Download, ArrowRight } from "lucide-react";
@@ -45,7 +45,7 @@ export default function ImportExportPage() {
     <div>
       <div>
         <h1 className="text-2xl font-semibold">Import / Export</h1>
-        <p className="mt-1 text-sm text-muted">Import bills from CSV or export your data.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Import bills from CSV or export your data.</p>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -53,15 +53,17 @@ export default function ImportExportPage() {
           <CardHeader>
             <CardTitle>Export Bills</CardTitle>
           </CardHeader>
-          <p className="mb-4 text-sm text-muted">
-            Download your bill list as a CSV file.
-          </p>
-          <a href="/api/export/bills">
-            <Button variant="secondary">
-              <Download size={16} />
-              Export CSV
-            </Button>
-          </a>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Download your bill list as a CSV file.
+            </p>
+            <a href="/api/export/bills">
+              <Button variant="outline">
+                <Download size={16} />
+                Export CSV
+              </Button>
+            </a>
+          </CardContent>
         </Card>
 
         <Card>
@@ -72,19 +74,19 @@ export default function ImportExportPage() {
             </div>
           </CardHeader>
           {plan === "free" ? (
-            <>
-              <p className="mb-4 text-sm text-muted">
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">
                 CSV import is available on the Pro plan. Upgrade to import bills in bulk.
               </p>
               <Link href="/pricing">
-                <Button variant="secondary">
+                <Button variant="outline">
                   Upgrade to Pro
                   <ArrowRight size={14} />
                 </Button>
               </Link>
-            </>
+            </CardContent>
           ) : (
-            <>
+            <CardContent>
               <textarea
                 className="mb-4 h-32 w-full rounded-md border border-border bg-white p-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
                 placeholder="Paste CSV content or upload a file..."
@@ -97,7 +99,7 @@ export default function ImportExportPage() {
                   Preview
                 </Button>
               </div>
-            </>
+            </CardContent>
           )}
         </Card>
       </div>
@@ -108,6 +110,7 @@ export default function ImportExportPage() {
             <CardTitle>Preview</CardTitle>
           </CardHeader>
 
+          <CardContent>
           {preview.errors.length > 0 && (
             <div className="mb-4">
               <p className="mb-2 text-sm font-medium text-destructive">Errors</p>
@@ -141,7 +144,7 @@ export default function ImportExportPage() {
               </p>
               <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-background text-xs font-medium uppercase text-muted">
+                  <thead className="border-b border-border bg-background text-xs font-medium uppercase text-muted-foreground">
                     <tr>
                       <th className="px-4 py-2">Row</th>
                       <th className="px-4 py-2">Name</th>
@@ -170,6 +173,7 @@ export default function ImportExportPage() {
               </div>
             </div>
           )}
+          </CardContent>
         </Card>
       )}
     </div>

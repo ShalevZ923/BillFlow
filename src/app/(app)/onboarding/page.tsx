@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { currencyOptions } from "@/lib/currency/supported";
@@ -47,14 +54,14 @@ export default function OnboardingPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Step {step + 1} of {steps.length}
           </p>
           <CardTitle>{steps[step]?.title}</CardTitle>
-          <p className="text-sm text-muted">{steps[step]?.description}</p>
+          <p className="text-sm text-muted-foreground">{steps[step]?.description}</p>
         </CardHeader>
 
-        <div className="mt-4">
+        <CardContent>
           {step === 0 && (
             <Input
               placeholder="Your name"
@@ -64,17 +71,18 @@ export default function OnboardingPage() {
           )}
 
           {step === 1 && (
-            <select
-              className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-            >
-              {currencyOptions.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} ({c.symbol}) - {c.label}
-                </option>
-              ))}
-            </select>
+            <Select value={currency} onValueChange={(v) => v && setCurrency(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyOptions.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.code} ({c.symbol}) - {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
 
           {step === 2 && (
@@ -95,15 +103,15 @@ export default function OnboardingPage() {
               />
               <span className="text-sm">Enable email reminders</span>
             </label>
-          )}
-        </div>
+              )}
+        </CardContent>
 
-        <div className="mt-6 flex justify-end">
+        <CardFooter className="justify-end">
           <Button onClick={handleNext}>
             {step < steps.length - 1 ? "Next" : "Go to Dashboard"}
             <ArrowRight size={16} />
           </Button>
-        </div>
+        </CardFooter>
       </Card>
     </div>
   );

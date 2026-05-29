@@ -31,7 +31,7 @@ export default function Home() {
           <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
             Billing follow-up without spreadsheet drift.
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-8 text-muted">
+          <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
             BillFlow helps small teams monitor invoices, schedule reminders, and understand what
             payments are at risk before month-end.
           </p>
@@ -40,7 +40,7 @@ export default function Home() {
               <Button size="lg">Get started free</Button>
             </Link>
             <Link href="/features">
-              <Button variant="secondary" size="lg">
+              <Button variant="outline" size="lg">
                 Learn more
               </Button>
             </Link>
@@ -50,7 +50,7 @@ export default function Home() {
         <div className="rounded-lg border border-border bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
-              <p className="text-sm font-medium text-muted">Open receivables</p>
+              <p className="text-sm font-medium text-muted-foreground">Open receivables</p>
               <p className="mt-1 text-2xl font-semibold">$42,860</p>
             </div>
             <span className="rounded-md bg-background px-3 py-1 text-sm font-medium text-primary">
@@ -70,7 +70,7 @@ export default function Home() {
               >
                 <div>
                   <p className="text-sm font-medium">{client}</p>
-                  <p className="mt-1 text-sm text-muted">{status}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{status}</p>
                 </div>
                 <p className="text-sm font-semibold">{amount}</p>
               </div>
@@ -88,7 +88,7 @@ export default function Home() {
               <article className="rounded-lg border border-border p-5" key={item.title}>
                 <Icon aria-hidden="true" className="text-primary" size={22} />
                 <h2 className="mt-4 text-base font-semibold">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-muted">{item.description}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
               </article>
             );
           })}
@@ -97,7 +97,7 @@ export default function Home() {
 
       <section className="mx-auto w-full max-w-6xl px-5 py-16 text-center">
         <h2 className="text-3xl font-semibold">Ready to organize your bills?</h2>
-        <p className="mx-auto mt-4 max-w-xl text-muted">
+        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
           Start tracking invoices, automating reminders, and watching your cash flow in one place.
         </p>
         <div className="mt-8">

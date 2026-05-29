@@ -47,7 +47,7 @@ export function AppSidebar() {
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
                 isActive
                   ? "bg-primary/10 text-primary"
-                  : "text-muted hover:bg-background hover:text-foreground"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground"
               )}
             >
               <Icon size={18} />

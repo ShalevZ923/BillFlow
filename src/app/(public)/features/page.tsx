@@ -63,7 +63,7 @@ export default function Features() {
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto w-full max-w-5xl px-5 py-20 text-center">
         <h1 className="text-4xl font-semibold">Everything you need to stay on top of bills</h1>
-        <p className="mx-auto mt-4 max-w-xl text-muted">
+        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
           BillFlow combines tracking, reminders, and insights into one dashboard.
         </p>
 
@@ -77,7 +77,7 @@ export default function Features() {
               >
                 <Icon aria-hidden="true" className="text-primary" size={22} />
                 <h3 className="mt-3 text-base font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted">{feature.description}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{feature.description}</p>
               </article>
             );
           })}

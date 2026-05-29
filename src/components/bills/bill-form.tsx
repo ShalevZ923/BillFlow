@@ -77,9 +77,9 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <Input
             id="name"
             placeholder="e.g. AWS Invoice"
-            error={errors.name?.message}
             {...register("name")}
           />
+          {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
         </div>
 
         <div>
@@ -89,9 +89,9 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <Input
             id="amount"
             placeholder="120.50"
-            error={errors.amount?.message}
             {...register("amount")}
           />
+          {errors.amount && <p className="mt-1 text-sm text-destructive">{errors.amount.message}</p>}
         </div>
 
         <div>
@@ -118,9 +118,9 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <Input
             id="dueDate"
             type="date"
-            error={errors.dueDate?.message}
             {...register("dueDate")}
           />
+          {errors.dueDate && <p className="mt-1 text-sm text-destructive">{errors.dueDate.message}</p>}
         </div>
 
         <div>
@@ -160,9 +160,9 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <Input
             id="category"
             placeholder="Cloud"
-            error={errors.category?.message}
             {...register("category")}
           />
+          {errors.category && <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>}
         </div>
 
         <div>
@@ -215,7 +215,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
           <textarea
             id="notes"
             rows={3}
-            className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             placeholder="Optional notes"
             {...register("notes")}
           />

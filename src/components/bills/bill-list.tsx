@@ -40,7 +40,7 @@ export function BillList({ bills, emptyStateText }: BillListProps) {
   if (bills.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-white p-12 text-center">
-        <p className="text-muted">{emptyStateText}</p>
+          <p className="text-muted-foreground">{emptyStateText}</p>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export function BillList({ bills, emptyStateText }: BillListProps) {
     <div>
       <div className="mb-4">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
             placeholder="Search bills..."
@@ -61,7 +61,7 @@ export function BillList({ bills, emptyStateText }: BillListProps) {
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-border bg-white p-8 text-center">
-          <p className="text-sm text-muted">No bills match your search.</p>
+          <p className="text-sm text-muted-foreground">No bills match your search.</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
