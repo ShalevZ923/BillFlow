@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -16,6 +17,9 @@ type MonthlyBreakdownProps = {
 };
 
 export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   if (monthlyBreakdown.length === 0) {
     return (
       <Card>
@@ -25,6 +29,17 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
         <div className="flex h-64 items-center justify-center text-sm text-muted">
           No data yet
         </div>
+      </Card>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Cost Breakdown</CardTitle>
+        </CardHeader>
+        <div className="h-64" />
       </Card>
     );
   }

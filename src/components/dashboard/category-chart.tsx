@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -10,6 +11,9 @@ type CategoryChartProps = {
 };
 
 export function CategoryChart({ categoryTotals }: CategoryChartProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   if (categoryTotals.length === 0) {
     return (
       <Card>
@@ -19,6 +23,17 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
         <div className="flex h-64 items-center justify-center text-sm text-muted">
           No data yet
         </div>
+      </Card>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending by Category</CardTitle>
+        </CardHeader>
+        <div className="h-64" />
       </Card>
     );
   }
