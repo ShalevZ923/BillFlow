@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780052612169,
+      "tag": "0000_striped_dragon_lord",
+      "breakpoints": true
+    }
+  ]
+}
