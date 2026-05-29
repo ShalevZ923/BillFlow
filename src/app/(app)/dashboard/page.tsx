@@ -9,9 +9,12 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { AiInsightCard } from "@/components/dashboard/ai-insight-card";
 import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 const mockBills: BillListItem[] = [
   {
@@ -151,6 +154,12 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">{today}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/bills">
+            <Button>
+              <Plus />
+              New Bill
+            </Button>
+          </Link>
           <DashboardCurrencySelector value={currency} onChange={setCurrency} />
         </div>
       </div>
