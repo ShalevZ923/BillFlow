@@ -1,8 +1,189 @@
-export default function Dashboard() {
+"use client";
+
+import { useState } from "react";
+import { SummaryCards } from "@/components/dashboard/summary-cards";
+import { CategoryChart } from "@/components/dashboard/category-chart";
+import { MonthlyBreakdown } from "@/components/dashboard/monthly-breakdown";
+import { UpcomingList } from "@/components/dashboard/upcoming-list";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { AiInsightCard } from "@/components/dashboard/ai-insight-card";
+import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
+import { BillList, type BillListItem } from "@/components/bills/bill-list";
+import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
+
+const mockBills: BillListItem[] = [
+  {
+    id: "bill-1",
+    name: "AWS Invoice",
+    amountCents: 12050,
+    currency: "USD",
+    dueDate: "2026-06-15",
+    category: "Cloud",
+    priority: "medium",
+    status: "unpaid",
+    tags: ["cloud", "infrastructure"]
+  },
+  {
+    id: "bill-2",
+    name: "Office Rent",
+    amountCents: 280000,
+    currency: "USD",
+    dueDate: "2026-06-01",
+    category: "Rent",
+    priority: "critical",
+    status: "unpaid",
+    tags: ["office"]
+  },
+  {
+    id: "bill-3",
+    name: "GitHub Teams",
+    amountCents: 8400,
+    currency: "USD",
+    dueDate: "2026-05-01",
+    category: "SaaS",
+    priority: "medium",
+    status: "overdue",
+    tags: ["dev"]
+  },
+  {
+    id: "bill-4",
+    name: "Adobe Creative Cloud",
+    amountCents: 5999,
+    currency: "USD",
+    dueDate: "2026-04-15",
+    category: "SaaS",
+    priority: "low",
+    status: "paid",
+    tags: ["design"]
+  }
+];
+
+const categoryTotals = [
+  { category: "Rent", amountCents: 280000 },
+  { category: "Cloud", amountCents: 12050 },
+  { category: "SaaS", amountCents: 14399 }
+];
+
+const monthlyBreakdown = [
+  { month: "2026-04", amountCents: 5999 },
+  { month: "2026-05", amountCents: 8400 },
+  { month: "2026-06", amountCents: 292050 },
+  { month: "2026-07", amountCents: 292050 },
+  { month: "2026-08", amountCents: 292050 }
+];
+
+const upcomingItems = [
+  {
+    id: "occ-1",
+    billId: "bill-2",
+    name: "Office Rent",
+    dueDate: "2026-06-01",
+    amountCents: 280000,
+    status: "unpaid" as OccurrenceStatus,
+    daysUntilDue: 3
+  },
+  {
+    id: "occ-2",
+    billId: "bill-1",
+    name: "AWS Invoice",
+    dueDate: "2026-06-15",
+    amountCents: 12050,
+    status: "unpaid" as OccurrenceStatus,
+    daysUntilDue: 17
+  }
+];
+
+type FilterState = {
+  search: string;
+  status: OccurrenceStatus | null;
+  category: string | null;
+  tag: string | null;
+  priority: BillPriority | null;
+};
+
+export default function DashboardPage() {
+  const [currency, setCurrency] = useState("USD");
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    status: null,
+    category: null,
+    tag: null,
+    priority: null
+  });
+
+  const categories = [...new Set(mockBills.map((b) => b.category))];
+  const tags = [...new Set(mockBills.flatMap((b) => b.tags))];
+
+  const filteredBills = mockBills.filter((bill) => {
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      if (
+        !bill.name.toLowerCase().includes(q) &&
+        !bill.category.toLowerCase().includes(q) &&
+        !bill.tags.some((t) => t.toLowerCase().includes(q))
+      ) {
+        return false;
+      }
+    }
+    if (filters.status && bill.status !== filters.status) return false;
+    if (filters.category && bill.category !== filters.category) return false;
+    if (filters.tag && !bill.tags.includes(filters.tag)) return false;
+    if (filters.priority && bill.priority !== filters.priority) return false;
+    return true;
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="mt-2 text-muted">Your bill command center will appear here.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted">{today}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <DashboardCurrencySelector value={currency} onChange={setCurrency} />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <SummaryCards
+          monthlyObligationsCents={292050}
+          yearlyProjectionCents={3504600}
+          pendingCount={2}
+          pendingAmountCents={292050}
+          overdueCount={1}
+          overdueAmountCents={8400}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <CategoryChart categoryTotals={categoryTotals} />
+        <MonthlyBreakdown monthlyBreakdown={monthlyBreakdown} />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <UpcomingList items={upcomingItems} />
+        </div>
+        <AiInsightCard plan="free" />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-4 text-lg font-semibold">All Bills</h2>
+        <div className="mb-4">
+          <DashboardFilters
+            filters={filters}
+            categories={categories}
+            tags={tags}
+            onFilterChange={setFilters}
+          />
+        </div>
+        <BillList
+          bills={filteredBills}
+          emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
+        />
+      </div>
     </div>
   );
 }
