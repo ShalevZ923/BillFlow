@@ -49,7 +49,7 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
                 <Cell key={index} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => `$${value}`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>

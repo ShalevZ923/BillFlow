@@ -45,7 +45,7 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(value: number) => `$${value}`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Bar dataKey="amount" fill="#0d9488" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
