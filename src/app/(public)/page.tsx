@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { ArrowRight, Bell, FileText, LineChart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const workflowItems = [
   {
@@ -21,24 +23,6 @@ const workflowItems = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="border-b border-border bg-white">
-        <div className="mx-auto flex min-h-[72px] w-full max-w-6xl items-center justify-between px-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
-              BF
-            </div>
-            <span className="text-base font-semibold">BillFlow</span>
-          </div>
-          <a
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-white transition hover:opacity-90"
-            href="mailto:hello@billflow.local"
-          >
-            Request access
-            <ArrowRight aria-hidden="true" size={16} />
-          </a>
-        </div>
-      </section>
-
       <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:py-20">
         <div className="max-w-2xl">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.14em] text-primary">
@@ -51,6 +35,16 @@ export default function Home() {
             BillFlow helps small teams monitor invoices, schedule reminders, and understand what
             payments are at risk before month-end.
           </p>
+          <div className="mt-8 flex items-center gap-4">
+            <Link href="/signup">
+              <Button size="lg">Get started free</Button>
+            </Link>
+            <Link href="/features">
+              <Button variant="secondary" size="lg">
+                Learn more
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border bg-white p-4 shadow-sm">
@@ -98,6 +92,21 @@ export default function Home() {
               </article>
             );
           })}
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 py-16 text-center">
+        <h2 className="text-3xl font-semibold">Ready to organize your bills?</h2>
+        <p className="mx-auto mt-4 max-w-xl text-muted">
+          Start tracking invoices, automating reminders, and watching your cash flow in one place.
+        </p>
+        <div className="mt-8">
+          <Link href="/signup">
+            <Button size="lg">
+              Get started free
+              <ArrowRight size={16} />
+            </Button>
+          </Link>
         </div>
       </section>
     </main>
