@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import { boolean, date, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import type { CurrencyCode } from "@/lib/billing/types";
 
 export const planEnum = pgEnum("plan", ["free", "pro"]);
 export const cycleEnum = pgEnum("billing_cycle", ["one-time", "monthly", "yearly", "custom"]);
@@ -77,6 +78,14 @@ export const paymentRecords = pgTable("payment_records", {
   paidDate: date("paid_date").notNull(),
   method: paymentMethodEnum("method").notNull().default("other"),
   note: text("note").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
+
+export const exchangeRateSnapshots = pgTable("exchange_rate_snapshots", {
+  id: text("id").primaryKey().default("global"),
+  base: text("base").$type<CurrencyCode>().notNull().default("USD"),
+  rates: jsonb("rates").$type<Record<CurrencyCode, number>>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 });
 
