@@ -10,14 +10,28 @@ describe("plan limits", () => {
     });
   });
 
-  it("allows pro users to create unlimited bills and use paid features", () => {
+  it("allows pro users at any count", () => {
     expect(canCreateBill({ plan: "pro", currentBillCount: 500 })).toEqual({ allowed: true });
-    expect(getPlanCapabilities("pro")).toMatchObject({
-      aiInsights: true,
-      aiFill: true,
-      csvImport: true,
-      csvExport: true,
-      liveCurrencyConverter: true
-    });
+    expect(canCreateBill({ plan: "pro", currentBillCount: 0 })).toEqual({ allowed: true });
+  });
+
+  it("returns correct free plan capabilities", () => {
+    const caps = getPlanCapabilities("free");
+    expect(caps.maxBills).toBe(25);
+    expect(caps.aiInsights).toBe(false);
+    expect(caps.aiFill).toBe(false);
+    expect(caps.csvImport).toBe(false);
+    expect(caps.csvExport).toBe(true);
+    expect(caps.liveCurrencyConverter).toBe(false);
+  });
+
+  it("returns correct pro plan capabilities", () => {
+    const caps = getPlanCapabilities("pro");
+    expect(caps.maxBills).toBeNull();
+    expect(caps.aiInsights).toBe(true);
+    expect(caps.aiFill).toBe(true);
+    expect(caps.csvImport).toBe(true);
+    expect(caps.csvExport).toBe(true);
+    expect(caps.liveCurrencyConverter).toBe(true);
   });
 });

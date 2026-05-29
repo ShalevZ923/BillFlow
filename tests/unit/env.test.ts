@@ -13,10 +13,31 @@ describe("getEnv", () => {
     expect(() => getEnv({ NEXT_PUBLIC_APP_URL: "not-a-url" })).toThrow();
   });
 
-  it("treats blank optional strings as absent", () => {
-    const env = getEnv({ NEXT_PUBLIC_SUPABASE_URL: "", DATABASE_URL: "" });
+  it("accepts all optional keys populated", () => {
+    const env = getEnv({
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      DATABASE_URL: "postgres://localhost:5432/db",
+      STRIPE_SECRET_KEY: "sk_test",
+      STRIPE_WEBHOOK_SECRET: "whsec",
+      STRIPE_PRO_PRICE_ID: "price_123",
+      OPENAI_API_KEY: "sk-openai",
+      RESEND_API_KEY: "re_key",
+      VAPID_PUBLIC_KEY: "pub",
+      VAPID_PRIVATE_KEY: "priv",
+      CRON_SECRET: "secret"
+    });
 
-    expect(env.NEXT_PUBLIC_SUPABASE_URL).toBeUndefined();
-    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.DATABASE_URL).toBe("postgres://localhost:5432/db");
+  });
+
+  it("rejects invalid exchange rate API URL", () => {
+    expect(() => getEnv({ EXCHANGE_RATE_API_URL: "not-a-url" })).toThrow();
+  });
+
+  it("defaults REMINDER_FROM_EMAIL", () => {
+    const env = getEnv({});
+    expect(env.REMINDER_FROM_EMAIL).toBe("BillFlow <reminders@example.com>");
   });
 });

@@ -17,4 +17,16 @@ describe("Stripe subscription mapping", () => {
   it("maps incomplete subscription to free", () => {
     expect(mapSubscriptionToPlan("incomplete")).toBe("free");
   });
+
+  it("maps past_due subscription to free", () => {
+    expect(mapSubscriptionToPlan("past_due")).toBe("free");
+  });
+
+  it("maps unpaid subscription to free", () => {
+    expect(mapSubscriptionToPlan("unpaid")).toBe("free");
+  });
+
+  it("maps incomplete_expired subscription to free", () => {
+    expect(mapSubscriptionToPlan("incomplete_expired")).toBe("free");
+  });
 });

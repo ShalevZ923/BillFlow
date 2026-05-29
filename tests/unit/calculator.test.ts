@@ -18,4 +18,24 @@ describe("financial calculator", () => {
   it("calculates total from cents", () => {
     expect(totalFromCents([1000, 2000, 3000])).toBe(6000);
   });
+
+  it("handles percentage change from zero (increase)", () => {
+    expect(percentageChange(0, 10000)).toBe(100);
+  });
+
+  it("handles percentage change with both zeros", () => {
+    expect(percentageChange(0, 0)).toBe(0);
+  });
+
+  it("handles total from empty array", () => {
+    expect(totalFromCents([])).toBe(0);
+  });
+
+  it("handles total with negative amounts", () => {
+    expect(totalFromCents([1000, -200, 300])).toBe(1100);
+  });
+
+  it("rounds yearly to monthly for non-divisible values", () => {
+    expect(yearlyToMonthly(10000)).toBe(833);
+  });
 });

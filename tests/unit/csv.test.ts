@@ -38,6 +38,71 @@ Test,200.00,USD,2026-07-15,monthly,Other,low,unpaid,,`;
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.validRows).toHaveLength(0);
   });
+
+  it("supports due_date alternate column name", () => {
+    const csv = `name,amount,currency,due_date,cycle,category,priority,status,tags,notes
+Test,50.00,USD,2026-06-15,monthly,Other,medium,unpaid,,`;
+    const result = parseBillCsv(csv);
+    expect(result.validRows).toHaveLength(1);
+  });
+
+  it("supports billingcycle alternate column name", () => {
+    const csv = `name,amount,currency,dueDate,billingcycle,category,priority,status,tags,notes
+Test,50.00,USD,2026-06-15,monthly,Other,medium,unpaid,,`;
+    const result = parseBillCsv(csv);
+    expect(result.validRows).toHaveLength(1);
+  });
+
+  it("handles header-only CSV with no data rows", () => {
+    const csv = `name,amount,currency,dueDate,cycle,category,priority,status,tags,notes`;
+    const result = parseBillCsv(csv);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("handles CSV with quoted names and special characters", () => {
+    const csv = `name,amount,currency,dueDate,cycle,category,priority,status,tags,notes
+"ACME, Inc.",100.00,USD,2026-06-15,monthly,Other,medium,unpaid,,"Note with line"`;
+    const result = parseBillCsv(csv);
+    expect(result.errors.length).toBe(0);
+    expect(result.validRows[0]?.bill.name).toBe("ACME, Inc.");
+    expect(result.validRows[0]?.bill.notes).toBe("Note with line");
+  });
+
+  it("handles Windows CRLF line endings", () => {
+    const csv = "name,amount,currency,dueDate,cycle,category,priority,status,tags,notes\r\nTest,50.00,USD,2026-06-15,monthly,Other,medium,unpaid,,";
+    const result = parseBillCsv(csv);
+    expect(result.errors).toHaveLength(0);
+    expect(result.validRows).toHaveLength(1);
+  });
+
+  it("collects all errors when every row is invalid", () => {
+    const csv = `name,amount,currency,dueDate,cycle,category,priority,status,tags,notes
+,abc,USD,2026-06-15,monthly,Other,medium,unpaid,,
+,xyz,USD,2026-06-15,monthly,Other,medium,unpaid,,`;
+    const result = parseBillCsv(csv);
+    expect(result.errors.length).toBeGreaterThan(1);
+    expect(result.validRows).toHaveLength(0);
+  });
+
+  it("ignores empty rows between data", () => {
+    const csv = `name,amount,currency,dueDate,cycle,category,priority,status,tags,notes
+Test,50.00,USD,2026-06-15,monthly,Other,medium,unpaid,,
+
+Test2,50.00,USD,2026-07-15,monthly,Other,medium,unpaid,,`;
+    const result = parseBillCsv(csv);
+    expect(result.validRows).toHaveLength(2);
+  });
+
+  it("uses defaults for missing optional fields", () => {
+    const csv = `name,amount,currency,dueDate
+Test,50.00,USD,2026-06-15`;
+    const result = parseBillCsv(csv);
+    expect(result.validRows).toHaveLength(1);
+    expect(result.validRows[0]?.bill.category).toBe("Other");
+    expect(result.validRows[0]?.bill.cycle).toBe("one-time");
+    expect(result.validRows[0]?.bill.priority).toBe("medium");
+    expect(result.validRows[0]?.bill.status).toBe("unpaid");
+  });
 });
 
 describe("CSV export", () => {
@@ -70,5 +135,27 @@ describe("CSV export", () => {
     expect(parsed.validRows).toHaveLength(1);
     expect(parsed.validRows[0]?.bill.name).toBe("AWS Invoice");
     expect(parsed.validRows[0]?.bill.amountCents).toBe(12050);
+  });
+
+  it("generates only header for empty bill array", () => {
+    const csv = generateBillCsv([]);
+    expect(csv).toBe("name,amount,currency,dueDate,cycle,category,priority,status,tags,notes");
+  });
+
+  it("escapes double quotes in notes during export", () => {
+    const billWithQuotes: BillInput = {
+      name: "Test",
+      amountCents: 1000,
+      currency: "USD",
+      dueDate: "2026-06-15",
+      cycle: "monthly",
+      category: "Other",
+      priority: "medium",
+      status: "unpaid",
+      tags: [],
+      notes: "Note with quotes inside"
+    };
+    const csv = generateBillCsv([billWithQuotes]);
+    expect(csv).toContain("Note with quotes inside");
   });
 });

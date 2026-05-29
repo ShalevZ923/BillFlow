@@ -27,11 +27,16 @@ function parseUpdatedAt(value: unknown): string {
     return new Date().toISOString();
   }
 
-  return new Date(`${value}T00:00:00.000Z`).toISOString();
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (isNaN(parsed.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return parsed.toISOString();
 }
 
 function normalizeRates(response: ExchangeRateResponse): ExchangeRates {
-  if (!isCurrencyCode(response.base) || response.rates === null || typeof response.rates !== "object") {
+  if (!isCurrencyCode(response.base) || response.rates === null || typeof response.rates !== "object" || Array.isArray(response.rates)) {
     throw new Error(missingRatesMessage);
   }
 
