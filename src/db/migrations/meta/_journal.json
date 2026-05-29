@@ -8,6 +8,13 @@
       "when": 1780052612169,
       "tag": "0000_striped_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780054651176,
+      "tag": "0001_luxuriant_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }
