@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BillFlow",
-  description: "Invoice tracking, payment reminders, and cash-flow visibility for small businesses."
+  title: "BillFlow by SeeHy",
+  description: "Manage every bill, due date, currency, and financial obligation in one clean dashboard. By SeeHy Labs."
 };
 
 type RootLayoutProps = {

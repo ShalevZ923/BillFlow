@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Plus, Upload, Globe, Calculator, Check, AlertTriangle, TrendingUp } from "lucide-react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthlyBreakdown } from "@/components/dashboard/monthly-breakdown";
@@ -12,13 +13,22 @@ import { BillList, type BillListItem } from "@/components/bills/bill-list";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
+import {
+  mockBills,
+  mockCategoryTotals,
+  mockMonthlyBreakdown,
+  mockUpcomingItems,
+  mockDashboardSummary,
+  mockActivityFeed,
+  mockUserProfile
+} from "@/lib/mock/data";
 
 function filterBillsByPeriod(bills: BillListItem[], period: string): BillListItem[] {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const currentYear = `${now.getFullYear()}`;
-
   switch (period) {
     case "month":
       return bills.filter((bill) => bill.dueDate.startsWith(currentMonth));
@@ -29,87 +39,9 @@ function filterBillsByPeriod(bills: BillListItem[], period: string): BillListIte
   }
 }
 
-const mockBills: BillListItem[] = [
-  {
-    id: "bill-1",
-    name: "AWS Invoice",
-    amountCents: 12050,
-    currency: "USD",
-    dueDate: "2026-06-15",
-    category: "Cloud",
-    priority: "medium",
-    status: "unpaid",
-    tags: ["cloud", "infrastructure"]
-  },
-  {
-    id: "bill-2",
-    name: "Office Rent",
-    amountCents: 280000,
-    currency: "USD",
-    dueDate: "2026-06-01",
-    category: "Rent",
-    priority: "critical",
-    status: "unpaid",
-    tags: ["office"]
-  },
-  {
-    id: "bill-3",
-    name: "GitHub Teams",
-    amountCents: 8400,
-    currency: "USD",
-    dueDate: "2026-05-01",
-    category: "SaaS",
-    priority: "medium",
-    status: "overdue",
-    tags: ["dev"]
-  },
-  {
-    id: "bill-4",
-    name: "Adobe Creative Cloud",
-    amountCents: 5999,
-    currency: "USD",
-    dueDate: "2026-04-15",
-    category: "SaaS",
-    priority: "low",
-    status: "paid",
-    tags: ["design"]
-  }
-];
-
-const categoryTotals = [
-  { category: "Rent", amountCents: 280000 },
-  { category: "Cloud", amountCents: 12050 },
-  { category: "SaaS", amountCents: 14399 }
-];
-
-const monthlyBreakdown = [
-  { month: "2026-04", amountCents: 5999 },
-  { month: "2026-05", amountCents: 8400 },
-  { month: "2026-06", amountCents: 292050 },
-  { month: "2026-07", amountCents: 292050 },
-  { month: "2026-08", amountCents: 292050 }
-];
-
-const upcomingItems = [
-  {
-    id: "occ-1",
-    billId: "bill-2",
-    name: "Office Rent",
-    dueDate: "2026-06-01",
-    amountCents: 280000,
-    status: "unpaid" as OccurrenceStatus,
-    daysUntilDue: 3
-  },
-  {
-    id: "occ-2",
-    billId: "bill-1",
-    name: "AWS Invoice",
-    dueDate: "2026-06-15",
-    amountCents: 12050,
-    status: "unpaid" as OccurrenceStatus,
-    daysUntilDue: 17
-  }
-];
+function formatCurrency(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
 
 type FilterState = {
   search: string;
@@ -119,11 +51,47 @@ type FilterState = {
   priority: BillPriority | null;
 };
 
+const mockBillListItems: BillListItem[] = mockBills.map((b) => ({
+  id: b.id,
+  name: b.name,
+  amountCents: b.amountCents,
+  currency: b.currency,
+  dueDate: b.dueDate,
+  category: b.category,
+  priority: b.priority,
+  status: b.status,
+  tags: b.tags
+}));
+
+const upcomingData = mockUpcomingItems.map((item) => ({
+  id: item.id,
+  billId: item.billId,
+  name: item.name,
+  dueDate: item.dueDate,
+  amountCents: item.amountCents,
+  status: item.status,
+  daysUntilDue: item.daysUntilDue
+}));
+
+const activityIcons: Record<string, React.ReactNode> = {
+  paid: <Check size={14} />,
+  added: <Plus size={14} />,
+  imported: <Upload size={14} />,
+  overdue: <AlertTriangle size={14} />
+};
+
+const activityColors: Record<string, string> = {
+  paid: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+  added: "bg-primary/10 text-primary",
+  imported: "bg-primary/10 text-primary",
+  overdue: "bg-destructive/10 text-destructive"
+};
+
 export default function DashboardPage() {
   const [currency, setCurrency] = useState("USD");
   const [period, setPeriod] = useState("overview");
   const [loading, setLoading] = useState(false);
-  const [bills, setBills] = useState<BillListItem[]>(mockBills);
+  const [bills, setBills] = useState<BillListItem[]>(mockBillListItems);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: null,
@@ -163,18 +131,22 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Welcome back, {mockUserProfile.name.split(" ")[0]}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">{today}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <CreateBillDialog onBillCreated={handleBillCreated} />
           <DashboardCurrencySelector value={currency} onChange={setCurrency} />
         </div>
       </div>
 
-      <Tabs value={period} onValueChange={setPeriod} className="mt-4">
+      {/* Period Tabs */}
+      <Tabs value={period} onValueChange={setPeriod} className="mb-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="month">This Month</TabsTrigger>
@@ -182,37 +154,88 @@ export default function DashboardPage() {
         </TabsList>
       </Tabs>
 
+      {/* Summary Cards */}
       {loading ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-[88px] rounded-xl" />
           ))}
         </div>
       ) : (
-        <div className="mt-6">
-          <SummaryCards
-            monthlyObligationsCents={292050}
-            yearlyProjectionCents={3504600}
-            pendingCount={2}
-            pendingAmountCents={292050}
-            overdueCount={1}
-            overdueAmountCents={8400}
-          />
-        </div>
+        <SummaryCards
+          monthlyObligationsCents={mockDashboardSummary.monthlyObligationsCents}
+          yearlyProjectionCents={mockDashboardSummary.yearlyProjectionCents}
+          pendingCount={mockDashboardSummary.pendingCount}
+          pendingAmountCents={mockDashboardSummary.pendingAmountCents}
+          overdueCount={mockDashboardSummary.overdueCount}
+          overdueAmountCents={mockDashboardSummary.overdueAmountCents}
+        />
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <CategoryChart categoryTotals={categoryTotals} />
-        <MonthlyBreakdown monthlyBreakdown={monthlyBreakdown} />
-      </div>
-
+      {/* Charts + Upcoming + Quick Actions */}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <UpcomingList items={upcomingItems} />
+        <div className="lg:col-span-2 space-y-6">
+          <MonthlyBreakdown monthlyBreakdown={mockMonthlyBreakdown} />
+          <CategoryChart categoryTotals={mockCategoryTotals} />
         </div>
-        <AiInsightCard plan="free" />
+
+        <div className="space-y-6">
+          <UpcomingList items={upcomingData} />
+
+          {/* Quick Actions */}
+          <div className="rounded-xl border border-border bg-white p-5 shadow-sm dark:bg-card">
+            <h3 className="text-sm font-semibold mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { icon: Plus, label: "Add Bill" },
+                { icon: Upload, label: "Import" },
+                { icon: Globe, label: "Convert" },
+                { icon: Calculator, label: "Calculate" }
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-background p-3 text-xs font-medium transition hover:bg-muted hover:border-primary/30 dark:bg-muted/20"
+                >
+                  <action.icon size={16} className="text-primary" />
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <AiInsightCard plan="free" />
+        </div>
       </div>
 
+      {/* Recent Activity */}
+      <div className="mt-6 rounded-xl border border-border bg-white p-5 shadow-sm dark:bg-card">
+        <h3 className="text-sm font-semibold mb-3">Recent Activity</h3>
+        <div className="space-y-1">
+          {mockActivityFeed.map((act) => (
+            <div
+              key={act.id}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-muted/50"
+            >
+              <div
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${activityColors[act.action]}`}
+              >
+                {activityIcons[act.action]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium">{act.billName}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  was {act.action}
+                  {act.amountCents > 0 && ` — ${formatCurrency(act.amountCents)}`}
+                </span>
+              </div>
+              <span className="shrink-0 text-xs text-muted-foreground">{act.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bill List */}
       <div className="mt-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-semibold">All Bills</h2>

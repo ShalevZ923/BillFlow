@@ -11,6 +11,7 @@ import {
   DollarSign,
   Calculator,
   Upload,
+  Inbox,
   Settings,
   Moon,
   Sun,
@@ -36,6 +37,7 @@ const navItems = [
   { key: "currency", label: "Currency", href: "/currency", icon: DollarSign },
   { key: "calculator", label: "Calculator", href: "/calculator", icon: Calculator },
   { key: "import-export", label: "Import/Export", href: "/import-export", icon: Upload },
+  { key: "intake", label: "Intake Center", href: "/intake", icon: Inbox },
   { key: "settings", label: "Settings", href: "/settings", icon: Settings }
 ];
 
@@ -88,7 +90,10 @@ export function AppSidebar({
           BF
         </div>
         {!collapsed && (
-          <span className="truncate font-semibold dark:text-foreground">BillFlow</span>
+          <div className="min-w-0">
+            <span className="truncate text-sm font-semibold dark:text-foreground">BillFlow</span>
+            <span className="block text-[10px] text-muted-foreground">by SeeHy</span>
+          </div>
         )}
         <button
           onClick={onMobileClose}

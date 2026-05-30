@@ -1,246 +1,129 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { mockPricingPlans } from "@/lib/mock/data";
 
-const faqs = [
-  {
-    question: "Can I switch plans anytime?",
-    answer:
-      "Yes. You can upgrade from Free to Pro at any time. Your data and settings stay intact. If you downgrade, Pro features are disabled but your data is preserved.",
-  },
-  {
-    question: "What payment methods do you accept?",
-    answer:
-      "We accept all major credit and debit cards through Stripe, including Visa, Mastercard, and American Express. Invoices are available for annual plans.",
-  },
-  {
-    question: "Is there a free trial?",
-    answer:
-      "The Free plan is our trial &mdash; it is free forever with no time limit. You can try Pro for 14 days before your first payment.",
-  },
-  {
-    question: "Can I cancel my subscription?",
-    answer:
-      "Absolutely. Cancel anytime from your account settings. Your Pro features remain active until the end of your current billing period. No questions asked.",
-  },
-];
-
-const freeFeatures = [
-  "Up to 25 bills",
-  "CSV export",
-  "Basic dashboard",
-  "Email reminders",
-  "Community support",
-];
-
-const proFeatures = [
-  "Unlimited bills",
-  "AI insights",
-  "AI Fill",
-  "CSV import & export",
-  "Live currency converter",
-  "Priority reminders",
-];
-
-const businessFeatures = [
-  "Teams",
-  "Multiple dashboards",
-  "Roles & permissions",
-  "Business controls",
-];
-
-export default function Pricing() {
-  const [isYearly, setIsYearly] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
+export default function PricingPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto w-full max-w-5xl px-5 py-20 text-center">
-        <h1 className="text-4xl font-semibold">Simple, transparent pricing</h1>
-        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Start free. Upgrade when you need more power.
-        </p>
-
-        <div className="mt-8 flex justify-center">
-          <div className="inline-flex rounded-lg border border-border bg-muted p-1">
-            <button
-              onClick={() => setIsYearly(false)}
-              className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium transition",
-                !isYearly
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsYearly(true)}
-              className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium transition",
-                isYearly
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Yearly
-            </button>
-          </div>
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-16 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium dark:bg-card">
+          <Zap size={12} className="text-primary" />
+          Made by SeeHy Labs
         </div>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          Simple, transparent pricing
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+          Start free, upgrade when you need more power. No hidden fees, no
+          surprises.
+        </p>
+      </section>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {/* Free */}
-          <Card>
-            <CardContent>
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold">Free</h3>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold">$0</span>
-                  <span className="text-sm text-muted-foreground">
-                    {" "}
-                    forever
-                  </span>
+      <section className="mx-auto max-w-6xl px-5 pb-20">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {mockPricingPlans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative rounded-2xl border p-6 ${
+                plan.popular
+                  ? "border-primary bg-primary/5 shadow-lg ring-1 ring-primary dark:bg-primary/10"
+                  : "border-border bg-white dark:bg-card"
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">
+                  Most popular
                 </div>
+              )}
+              {plan.comingSoon && (
+                <div className="absolute -top-3 right-4 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-muted/50">
+                  Coming soon
+                </div>
+              )}
+              <div className="mb-4">
+                <p className="text-lg font-bold">{plan.name}</p>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground">{plan.period}</span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
-              <ul className="space-y-2 text-left">
-                {freeFeatures.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <Check size={16} className="text-primary shrink-0" />
+              <ul className="space-y-3 border-t border-border pt-5">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2.5 text-sm">
+                    <Check size={14} className="shrink-0 text-primary" />
                     {feature}
                   </li>
                 ))}
               </ul>
-              <div className="mt-6">
-                <Link href="/signup">
-                  <Button variant="outline" className="w-full">
-                    Get started
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pro */}
-          <Card className="ring-2 ring-primary relative">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-medium text-white">
-              Popular
-            </span>
-            <CardContent>
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold">Pro</h3>
-                <div className="mt-2">
-                  {isYearly ? (
-                    <>
-                      <span className="text-3xl font-bold">$9.60</span>
-                      <span className="text-sm text-muted-foreground">
-                        /month
-                      </span>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground line-through">
-                          $12.00/mo
-                        </span>
-                        <Badge variant="success">Save 20%</Badge>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-bold">$12</span>
-                      <span className="text-sm text-muted-foreground">
-                        /month
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <ul className="space-y-2 text-left">
-                {proFeatures.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <Check size={16} className="text-primary shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6">
-                <Link href="/signup">
-                  <Button className="w-full">Start Pro trial</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Business */}
-          <Card className="opacity-60 pointer-events-none select-none">
-            <CardContent>
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold">Business</h3>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold">Coming later</span>
-                </div>
-              </div>
-              <ul className="space-y-2 text-left">
-                {businessFeatures.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <Check size={16} className="text-primary shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6">
-                <Button variant="outline" className="w-full" disabled>
-                  Coming Soon
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Link
+                href={plan.comingSoon ? "#" : "/signup"}
+                className={`mt-6 block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition ${
+                  plan.popular
+                    ? "bg-primary text-white hover:bg-primary/90"
+                    : plan.comingSoon
+                      ? "cursor-not-allowed border border-border bg-muted text-muted-foreground dark:bg-muted/50"
+                      : "border border-border bg-white hover:bg-muted dark:bg-card dark:hover:bg-muted/20"
+                }`}
+                aria-disabled={plan.comingSoon}
+                tabIndex={plan.comingSoon ? -1 : undefined}
+              >
+                {plan.comingSoon ? "Coming soon" : plan.cta}
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-3xl px-5 pb-20">
-        <h2 className="text-center text-2xl font-semibold">
-          Frequently asked questions
-        </h2>
-        <div className="mt-10 divide-y divide-border rounded-lg border border-border bg-white">
-          {faqs.map((faq, i) => (
-            <div key={i}>
-              <button
-                onClick={() => toggleFaq(i)}
-                className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-medium transition hover:bg-muted/50"
-              >
-                {faq.question}
-                <ChevronDown
-                  size={18}
-                  className={cn(
-                    "shrink-0 text-muted-foreground transition-transform",
-                    openFaq === i && "rotate-180"
-                  )}
-                />
-              </button>
-              {openFaq === i && (
-                <div className="px-5 pb-4 text-sm leading-relaxed text-muted-foreground">
-                  {faq.answer}
-                </div>
-              )}
-            </div>
-          ))}
+      {/* FAQ */}
+      <section className="border-t border-border bg-white py-16 dark:bg-card">
+        <div className="mx-auto max-w-3xl px-5">
+          <h2 className="text-2xl font-bold text-center">Frequently asked questions</h2>
+          <div className="mt-8 space-y-6">
+            {[
+              {
+                q: "Can I switch plans later?",
+                a: "Yes. You can upgrade from Free to Pro at any time. Downgrading to Free will apply at the end of your billing period."
+              },
+              {
+                q: "What payment methods do you accept?",
+                a: "We accept all major credit and debit cards through Stripe. Invoices are available for Business plan customers."
+              },
+              {
+                q: "Is my financial data secure?",
+                a: "Yes. All data is encrypted in transit and at rest. We use Supabase for secure database storage and never share your data with third parties."
+              },
+              {
+                q: "Can I cancel anytime?",
+                a: "Absolutely. There are no long-term contracts. You can cancel your Pro subscription at any time and keep access until the end of your billing period."
+              }
+            ].map((faq) => (
+              <div key={faq.q}>
+                <h3 className="font-semibold">{faq.q}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-primary py-16">
+        <div className="mx-auto max-w-2xl px-5 text-center">
+          <h2 className="text-3xl font-bold text-white">
+            Ready to get started?
+          </h2>
+          <p className="mt-4 text-primary-foreground/80">
+            Join thousands of businesses and freelancers who trust BillFlow by SeeHy.
+          </p>
+          <div className="mt-6">
+            <Link href="/signup">
+              <Button size="lg" className="h-11 bg-white px-6 text-base font-semibold text-primary hover:bg-white/90">
+                Start free today
+                <ArrowRight size={16} />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </main>

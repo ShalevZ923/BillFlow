@@ -53,7 +53,10 @@ export function AppShell({ children }: AppShellProps) {
 
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-border bg-white px-4 md:hidden dark:bg-card">
-          <span className="font-semibold dark:text-foreground">BillFlow</span>
+          <div>
+            <span className="font-semibold dark:text-foreground">BillFlow</span>
+            <span className="ml-1 text-xs text-muted-foreground">by SeeHy</span>
+          </div>
           <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(true)}>
             <Menu />
           </Button>

@@ -1,131 +1,138 @@
+import Link from "next/link";
 import {
-  LayoutDashboard,
-  FileText,
-  Bell,
-  BarChart3,
-  Sparkles,
-  Upload,
-  DollarSign,
-  Shield,
-  Clock,
+  FileText, Lightbulb, DollarSign, Calculator, Upload, Inbox,
+  Sparkles, ArrowRight, Check, Zap
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-const featureGroups = [
+const features = [
   {
-    title: "Track & Organize",
-    items: [
-      {
-        title: "Dashboard command center",
-        description:
-          "One view shows what you owe, what is coming, what is overdue, and where costs concentrate.",
-        icon: LayoutDashboard,
-      },
-      {
-        title: "Recurring bill tracking",
-        description:
-          "Define bills once and let BillFlow plan 12 months of occurrences. Unpaid bills are never hidden.",
-        icon: Clock,
-      },
-      {
-        title: "Multi-currency",
-        description:
-          "Live currency conversion with cached rates. Dashboard totals in your preferred currency.",
-        icon: DollarSign,
-        pro: true,
-      },
-    ],
+    icon: <FileText size={24} />,
+    title: "Bill Tracking",
+    description: "Track every recurring and one-time bill in a single organized view. Never miss a due date again with smart reminders and at-a-glance status indicators.",
+    details: ["Recurring & one-time bills", "Due date tracking", "Status indicators (paid, unpaid, overdue)", "Priority levels (critical, high, medium, low)", "Tags and categories"]
   },
   {
-    title: "Collect & Automate",
-    items: [
-      {
-        title: "Payment records",
-        description:
-          "Record payments with method, date, and notes. Overdue history stays visible.",
-        icon: FileText,
-      },
-      {
-        title: "Smart reminders",
-        description:
-          "Email and browser push notifications 7 days before, 1 day before, and when overdue.",
-        icon: Bell,
-      },
-      {
-        title: "CSV Import & Export",
-        description:
-          "Import bills in bulk with preview and validation. Export filtered lists anytime.",
-        icon: Upload,
-        pro: true,
-      },
-    ],
-  },
-  {
+    icon: <Lightbulb size={24} />,
     title: "Smart Insights",
-    items: [
-      {
-        title: "AI-powered extraction",
-        description:
-          "Scan and auto-fill bill details from documents using AI. Save hours of manual entry.",
-        icon: Sparkles,
-        pro: true,
-      },
-      {
-        title: "Daily insights",
-        description:
-          "Daily AI-generated summary of patterns, risk areas, unusual changes, and suggested actions.",
-        icon: BarChart3,
-        pro: true,
-      },
-      {
-        title: "Secure by default",
-        description:
-          "Email/password and Google login through Supabase. Stripe for payments.",
-        icon: Shield,
-      },
-    ],
+    description: "AI-powered spending analysis that surfaces trends, anomalies, and savings opportunities from your billing data.",
+    details: ["Daily AI-generated insights (Pro)", "Spending pattern detection", "Anomaly alerts", "Category concentration warnings", "Savings opportunity suggestions"],
+    pro: true
   },
+  {
+    icon: <DollarSign size={24} />,
+    title: "Currency Conversion",
+    description: "Convert between USD, EUR, GBP, and ILS with live exchange rates. View every bill in your preferred currency.",
+    details: ["4 supported currencies", "Live exchange rates (Pro)", "Demo rates (Free)", "Dashboard currency switching", "Per-bill original currency"],
+    pro: true
+  },
+  {
+    icon: <Calculator size={24} />,
+    title: "Financial Calculator",
+    description: "Monthly projections, yearly totals, percentage changes, and subscription cost analysis — all in one tool.",
+    details: ["Monthly → Yearly projections", "Yearly → Monthly breakdowns", "Percentage change calculator", "Subscription annual cost", "Multi-bill totaling"]
+  },
+  {
+    icon: <Upload size={24} />,
+    title: "Import & Export",
+    description: "Bring in bills from CSV, Excel, and Google Sheets. Export filtered reports in seconds for analysis or accounting.",
+    details: ["CSV import with validation (Pro)", "CSV export (all plans)", "Column mapping", "Duplicate detection", "Preview before import"],
+    pro: true
+  },
+  {
+    icon: <Inbox size={24} />,
+    title: "Omnichannel Intake",
+    description: "Bills can come from Gmail, spreadsheets, PDFs, or invoicing platforms. One unified intake center to review them all.",
+    details: ["Gmail bill detection", "Google Sheets sync", "CSV / Excel import", "PDF invoice upload (coming soon)", "Confidence scoring & review"]
+  }
 ];
 
-export default function Features() {
+export default function FeaturesPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto w-full max-w-5xl px-5 py-20 text-center">
-        <h1 className="text-4xl font-semibold">
-          Everything you need to stay on top of bills
+      {/* Hero */}
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-16 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium dark:bg-card">
+          <Zap size={12} className="text-primary" />
+          Made by SeeHy Labs
+        </div>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          Everything you need to stay ahead of your bills
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          BillFlow combines tracking, reminders, and insights into one
-          dashboard.
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+          BillFlow by SeeHy gives you the tools to track, analyze, and manage
+          every financial obligation from one clean dashboard.
         </p>
+      </section>
 
-        <div className="mt-16 text-left">
-          {featureGroups.map((group) => (
-            <div key={group.title} className="mb-12">
-              <h2 className="text-lg font-semibold">{group.title}</h2>
-              <hr className="mt-3 mb-6 border-border" />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <article
-                      key={feature.title}
-                      className="rounded-lg border border-border bg-white p-5 shadow-xs"
-                    >
-                      <Icon aria-hidden="true" className="text-primary" size={22} />
-                      <h3 className="mt-3 flex items-center gap-2 text-base font-semibold">
-                        {feature.title}
-                        {feature.pro && <Badge variant="default">Pro</Badge>}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {feature.description}
-                      </p>
-                    </article>
-                  );
-                })}
+      {/* Feature Details */}
+      <section className="mx-auto max-w-6xl px-5 pb-20">
+        <div className="space-y-16">
+          {features.map((feature, i) => (
+            <div
+              key={feature.title}
+              className={`grid gap-8 lg:grid-cols-2 lg:items-center ${
+                i % 2 === 1 ? "lg:grid-flow-dense" : ""
+              }`}
+            >
+              <div className={i % 2 === 1 ? "lg:col-start-2" : ""}>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    {feature.icon}
+                  </div>
+                  {feature.pro && (
+                    <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold text-primary-foreground">
+                      Pro
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">{feature.title}</h2>
+                <p className="mt-3 leading-relaxed text-muted-foreground">
+                  {feature.description}
+                </p>
+                <ul className="mt-6 space-y-2.5">
+                  {feature.details.map((detail) => (
+                    <li key={detail} className="flex items-center gap-3 text-sm">
+                      <Check size={14} className="shrink-0 text-primary" />
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className={`rounded-2xl border border-border bg-white p-8 dark:bg-card ${i % 2 === 1 ? "lg:col-start-1 lg:row-start-1" : ""}`}>
+                {/* Feature illustration placeholder */}
+                <div className="flex h-64 items-center justify-center rounded-xl bg-muted/50 dark:bg-muted/30">
+                  <div className="text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      {feature.icon}
+                    </div>
+                    <p className="mt-3 text-sm font-medium">{feature.title}</p>
+                    <p className="text-xs text-muted-foreground">Interactive preview</p>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-y border-border bg-primary py-16">
+        <div className="mx-auto max-w-2xl px-5 text-center">
+          <h2 className="text-3xl font-bold text-white">
+            Ready to take control?
+          </h2>
+          <p className="mt-4 text-primary-foreground/80">
+            Start tracking your bills with BillFlow today — free.
+          </p>
+          <div className="mt-6">
+            <Link href="/signup">
+              <Button size="lg" className="h-11 bg-white px-6 text-base font-semibold text-primary hover:bg-white/90">
+                Get started free
+                <ArrowRight size={16} />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </main>
