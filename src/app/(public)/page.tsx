@@ -1,23 +1,34 @@
 import Link from "next/link";
-import { ArrowRight, Bell, FileText, LineChart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const workflowItems = [
+const sampleBills = [
+  { name: "Office Rent", amount: "$2,400", due: "Due Jun 1" },
+  { name: "Cloud Hosting", amount: "$599", due: "Due Jun 12" },
+  { name: "Electric Utility", amount: "$245", due: "Due Jun 5" },
+];
+
+const billsTotal = "$3,244";
+
+const howItWorks = [
   {
-    title: "Track invoices",
-    description: "Keep every sent, paid, overdue, and disputed invoice visible in one operating view.",
-    icon: FileText
+    step: 1,
+    title: "Add your bills",
+    description:
+      "Enter recurring and one-time bills with due dates and categories. BillFlow organizes everything in one place.",
   },
   {
-    title: "Automate reminders",
-    description: "Prepare polite follow-ups before balances turn into manual collection work.",
-    icon: Bell
+    step: 2,
+    title: "Get smart reminders",
+    description:
+      "Receive email notifications before payments are due. Nothing slips through the cracks.",
   },
   {
-    title: "Watch cash flow",
-    description: "See upcoming receipts and late-risk accounts before they surprise the business.",
-    icon: LineChart
-  }
+    step: 3,
+    title: "Track spending trends",
+    description:
+      "See monthly breakdowns, category insights, and projected costs to make better financial decisions.",
+  },
 ];
 
 export default function Home() {
@@ -26,14 +37,14 @@ export default function Home() {
       <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:py-20">
         <div className="max-w-2xl">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.14em] text-primary">
-            Receivables workflow
+            Smart bill tracking
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
-            Billing follow-up without spreadsheet drift.
+            Know every bill before it&rsquo;s due.
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
-            BillFlow helps small teams monitor invoices, schedule reminders, and understand what
-            payments are at risk before month-end.
+            BillFlow helps small teams track upcoming payments, get timely
+            reminders, and understand monthly spending &mdash; all in one place.
           </p>
           <div className="mt-8 flex items-center gap-4">
             <Link href="/signup">
@@ -50,29 +61,29 @@ export default function Home() {
         <div className="rounded-lg border border-border bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Open receivables</p>
-              <p className="mt-1 text-2xl font-semibold">$42,860</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Upcoming bills
+              </p>
+              <p className="mt-1 text-2xl font-semibold">{billsTotal}</p>
             </div>
             <span className="rounded-md bg-background px-3 py-1 text-sm font-medium text-primary">
-              18 invoices
+              {sampleBills.length} bills
             </span>
           </div>
 
           <div className="space-y-3 pt-4">
-            {[
-              ["Northstar Studio", "$7,200", "Due today"],
-              ["Keller Supply", "$12,450", "3 days overdue"],
-              ["Ridge Accounting", "$4,980", "Reminder queued"]
-            ].map(([client, amount, status]) => (
+            {sampleBills.map((bill) => (
               <div
                 className="grid grid-cols-[1fr_auto] gap-3 rounded-md border border-border px-3 py-3"
-                key={client}
+                key={bill.name}
               >
                 <div>
-                  <p className="text-sm font-medium">{client}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                  <p className="text-sm font-medium">{bill.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {bill.due}
+                  </p>
                 </div>
-                <p className="text-sm font-semibold">{amount}</p>
+                <p className="text-sm font-semibold">{bill.amount}</p>
               </div>
             ))}
           </div>
@@ -80,33 +91,85 @@ export default function Home() {
       </section>
 
       <section className="border-t border-border bg-white">
-        <div className="mx-auto grid w-full max-w-6xl gap-4 px-5 py-8 md:grid-cols-3">
-          {workflowItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <article className="rounded-lg border border-border p-5" key={item.title}>
-                <Icon aria-hidden="true" className="text-primary" size={22} />
-                <h2 className="mt-4 text-base font-semibold">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
-              </article>
-            );
-          })}
+        <div className="mx-auto flex w-full max-w-2xl divide-x divide-border rounded-lg border border-border py-6">
+          <div className="flex-1 px-4 text-center">
+            <p className="text-2xl font-bold">1,200+</p>
+            <p className="mt-1 text-sm text-muted-foreground">businesses</p>
+          </div>
+          <div className="flex-1 px-4 text-center">
+            <p className="text-2xl font-bold">50,000+</p>
+            <p className="mt-1 text-sm text-muted-foreground">bills tracked</p>
+          </div>
+          <div className="flex-1 px-4 text-center">
+            <p className="text-2xl font-bold">99.8%</p>
+            <p className="mt-1 text-sm text-muted-foreground">uptime</p>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-16 text-center">
-        <h2 className="text-3xl font-semibold">Ready to organize your bills?</h2>
+      <section className="mx-auto w-full max-w-6xl px-5 py-20">
+        <h2 className="text-center text-3xl font-semibold">How it works</h2>
+        <div className="mt-12 flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-center md:gap-0">
+          {howItWorks.map((item, i) => (
+            <div
+              key={item.title}
+              className="flex w-full flex-col items-center gap-0 md:flex-row md:flex-1"
+            >
+              <div className="flex flex-col items-center text-center md:max-w-64">
+                <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
+                  {item.step}
+                </div>
+                <h3 className="mt-4 text-base font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+              {i < howItWorks.length - 1 && (
+                <div className="flex items-center justify-center py-3 md:py-0 md:px-3 md:pt-7">
+                  <div className="h-10 w-px bg-border md:h-px md:w-12" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-white py-20">
+        <div className="mx-auto max-w-6xl px-5">
+          <blockquote className="mx-auto max-w-2xl text-center">
+            <p className="text-lg italic leading-relaxed text-muted-foreground">
+              &ldquo;BillFlow turned our bill chaos into a 10-minute weekly
+              review. I no longer miss due dates or wonder where our money
+              goes.&rdquo;
+            </p>
+            <footer className="mt-4 text-sm font-medium">
+              Sarah Chen
+              <span className="font-normal text-muted-foreground">
+                , Greenline Landscaping
+              </span>
+            </footer>
+          </blockquote>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 py-20 text-center">
+        <h2 className="text-3xl font-semibold">
+          Ready to organize your bills?
+        </h2>
         <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Start tracking invoices, automating reminders, and watching your cash flow in one place.
+          Start tracking bills, getting reminders, and watching your cash flow
+          in one place.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center gap-3">
           <Link href="/signup">
-            <Button size="lg">
+            <Button size="lg" className="h-11 px-8 text-base">
               Get started free
-              <ArrowRight size={16} />
+              <ArrowRight size={18} />
             </Button>
           </Link>
+          <p className="text-sm text-muted-foreground">
+            Start free &mdash; no credit card required
+          </p>
         </div>
       </section>
     </main>
