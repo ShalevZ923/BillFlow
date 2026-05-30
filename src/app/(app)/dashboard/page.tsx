@@ -9,12 +9,10 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { AiInsightCard } from "@/components/dashboard/ai-insight-card";
 import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
-import { Button } from "@/components/ui/button";
+import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
-import Link from "next/link";
-import { Plus } from "lucide-react";
 
 function filterBillsByPeriod(bills: BillListItem[], period: string): BillListItem[] {
   const now = new Date();
@@ -125,6 +123,7 @@ export default function DashboardPage() {
   const [currency, setCurrency] = useState("USD");
   const [period, setPeriod] = useState("overview");
   const [loading, setLoading] = useState(false);
+  const [bills, setBills] = useState<BillListItem[]>(mockBills);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: null,
@@ -133,11 +132,11 @@ export default function DashboardPage() {
     priority: null
   });
 
-  const categories = [...new Set(mockBills.map((b) => b.category))];
-  const tags = [...new Set(mockBills.flatMap((b) => b.tags))];
+  const categories = [...new Set(bills.map((b) => b.category))];
+  const tags = [...new Set(bills.flatMap((b) => b.tags))];
 
   const nonSearchFiltered = useMemo(() => {
-    return mockBills.filter((bill) => {
+    return bills.filter((bill) => {
       if (filters.status && bill.status !== filters.status) return false;
       if (filters.category && bill.category !== filters.category) return false;
       if (filters.tag && !bill.tags.includes(filters.tag)) return false;
@@ -158,6 +157,10 @@ export default function DashboardPage() {
     day: "numeric"
   });
 
+  function handleBillCreated(bill: BillListItem) {
+    setBills((prev) => [bill, ...prev]);
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -166,12 +169,7 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">{today}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/bills">
-            <Button>
-              <Plus />
-              New Bill
-            </Button>
-          </Link>
+          <CreateBillDialog onBillCreated={handleBillCreated} />
           <DashboardCurrencySelector value={currency} onChange={setCurrency} />
         </div>
       </div>

@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { BillForm } from "@/components/bills/bill-form";
+import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 const mockBills: BillListItem[] = [
   {
@@ -45,32 +42,9 @@ const mockBills: BillListItem[] = [
 
 export default function BillsPage() {
   const [bills, setBills] = useState<BillListItem[]>(mockBills);
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(data: Record<string, unknown>) {
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      const newBill: BillListItem = {
-        id: `bill-${Date.now()}`,
-        name: String(data.name),
-        amountCents: Math.round(parseFloat(String(data.amount)) * 100),
-        currency: String(data.currency),
-        dueDate: String(data.dueDate),
-        category: String(data.category),
-        priority: data.priority as BillListItem["priority"],
-        status: data.status as BillListItem["status"],
-        tags: String(data.tags)
-          .split(",")
-          .map((t: string) => t.trim())
-          .filter(Boolean)
-      };
-
-      setBills((prev) => [newBill, ...prev]);
-      setIsSubmitting(false);
-      setShowForm(false);
-    }, 500);
+  function handleBillCreated(bill: BillListItem) {
+    setBills((prev) => [bill, ...prev]);
   }
 
   return (
@@ -80,19 +54,8 @@ export default function BillsPage() {
           <h1 className="text-2xl font-semibold">Bills</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your recurring and one-time bills.</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus size={16} />
-          Add Bill
-        </Button>
+        <CreateBillDialog onBillCreated={handleBillCreated} />
       </div>
-
-      {showForm && (
-        <Card className="mt-6">
-          <CardContent>
-            <BillForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-          </CardContent>
-        </Card>
-      )}
 
       <div className="mt-6">
         <BillList
