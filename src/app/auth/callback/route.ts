@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createSupabaseServerClient } from "@/lib/auth/server";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
   if (code) {
-    // In production: exchange code for Supabase session
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error) {
+      return NextResponse.redirect(new URL("/dashboard", origin));
+    }
   }
 
   return NextResponse.redirect(new URL("/login", request.url));
