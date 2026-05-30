@@ -3,8 +3,15 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const COLORS = ["#0d9488", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#059669", "#db2777", "#52525b"];
+const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+];
 
 type CategoryChartProps = {
   categoryTotals: Array<{ category: string; amountCents: number }>;
@@ -36,7 +43,9 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
           <CardTitle>Spending by Category</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64" />
+          <div className="flex h-64 items-center justify-center">
+            <Skeleton className="h-44 w-44 rounded-full" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -66,7 +75,7 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
                 dataKey="value"
               >
                 {data.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip

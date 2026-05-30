@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { BillCard } from "@/components/bills/bill-card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
 export type BillListItem = {
@@ -21,21 +19,20 @@ export type BillListItem = {
 type BillListProps = {
   bills: BillListItem[];
   emptyStateText: string;
+  searchQuery?: string;
 };
 
-export function BillList({ bills, emptyStateText }: BillListProps) {
-  const [search, setSearch] = useState("");
-
+export function BillList({ bills, emptyStateText, searchQuery }: BillListProps) {
   const filtered = useMemo(() => {
-    if (!search) return bills;
-    const q = search.toLowerCase();
+    if (!searchQuery) return bills;
+    const q = searchQuery.toLowerCase();
     return bills.filter(
       (b) =>
         b.name.toLowerCase().includes(q) ||
         b.category.toLowerCase().includes(q) ||
         b.tags.some((t) => t.toLowerCase().includes(q))
     );
-  }, [bills, search]);
+  }, [bills, searchQuery]);
 
   if (bills.length === 0) {
     return (
@@ -45,31 +42,19 @@ export function BillList({ bills, emptyStateText }: BillListProps) {
     );
   }
 
-  return (
-    <div>
-      <div className="mb-4">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Search bills..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+  if (filtered.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-white p-8 text-center">
+        <p className="text-sm text-muted-foreground">No bills match your search.</p>
       </div>
+    );
+  }
 
-      {filtered.length === 0 ? (
-        <div className="rounded-lg border border-border bg-white p-8 text-center">
-          <p className="text-sm text-muted-foreground">No bills match your search.</p>
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((bill) => (
-            <BillCard key={bill.id} {...bill} />
-          ))}
-        </div>
-      )}
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {filtered.map((bill) => (
+        <BillCard key={bill.id} {...bill} />
+      ))}
     </div>
   );
 }
