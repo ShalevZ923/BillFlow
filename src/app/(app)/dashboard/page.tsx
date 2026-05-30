@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthlyBreakdown } from "@/components/dashboard/monthly-breakdown";
@@ -15,6 +15,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+
+function filterBillsByPeriod(bills: BillListItem[], period: string): BillListItem[] {
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentYear = `${now.getFullYear()}`;
+
+  switch (period) {
+    case "month":
+      return bills.filter((bill) => bill.dueDate.startsWith(currentMonth));
+    case "year":
+      return bills.filter((bill) => bill.dueDate.startsWith(currentYear));
+    default:
+      return bills;
+  }
+}
 
 const mockBills: BillListItem[] = [
   {
@@ -121,23 +136,20 @@ export default function DashboardPage() {
   const categories = [...new Set(mockBills.map((b) => b.category))];
   const tags = [...new Set(mockBills.flatMap((b) => b.tags))];
 
-  const filteredBills = mockBills.filter((bill) => {
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      if (
-        !bill.name.toLowerCase().includes(q) &&
-        !bill.category.toLowerCase().includes(q) &&
-        !bill.tags.some((t) => t.toLowerCase().includes(q))
-      ) {
-        return false;
-      }
-    }
-    if (filters.status && bill.status !== filters.status) return false;
-    if (filters.category && bill.category !== filters.category) return false;
-    if (filters.tag && !bill.tags.includes(filters.tag)) return false;
-    if (filters.priority && bill.priority !== filters.priority) return false;
-    return true;
-  });
+  const nonSearchFiltered = useMemo(() => {
+    return mockBills.filter((bill) => {
+      if (filters.status && bill.status !== filters.status) return false;
+      if (filters.category && bill.category !== filters.category) return false;
+      if (filters.tag && !bill.tags.includes(filters.tag)) return false;
+      if (filters.priority && bill.priority !== filters.priority) return false;
+      return true;
+    });
+  }, [filters.status, filters.category, filters.tag, filters.priority]);
+
+  const periodFiltered = useMemo(
+    () => filterBillsByPeriod(nonSearchFiltered, period),
+    [nonSearchFiltered, period]
+  );
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -215,7 +227,8 @@ export default function DashboardPage() {
         />
         <div className="mt-4">
           <BillList
-            bills={filteredBills}
+            bills={periodFiltered}
+            searchQuery={filters.search}
             emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
           />
         </div>
