@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PaymentForm, type PaymentFormValues } from "@/components/payments/payment-form";
-import { PaymentHistoryTable, type PaymentRecord } from "@/components/payments/payment-history-table";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { RecordPaymentDialog, type PaymentRecord } from "@/components/payments/record-payment-dialog";
+import { PaymentHistoryTable } from "@/components/payments/payment-history-table";
 
 const mockPayments: PaymentRecord[] = [
   {
@@ -34,29 +31,9 @@ const mockPayments: PaymentRecord[] = [
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>(mockPayments);
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(data: PaymentFormValues) {
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      const newPayment: PaymentRecord = {
-        id: `pay-${Date.now()}`,
-        billName: `Bill ${data.occurrenceId.slice(0, 8)}`,
-        category: "Other",
-        paidAmountCents: Math.round(parseFloat(data.paidAmount) * 100),
-        paidCurrency: data.paidCurrency,
-        paidDate: data.paidDate,
-        method: data.method,
-        note: data.note,
-        status: "paid"
-      };
-
-      setPayments((prev) => [newPayment, ...prev]);
-      setIsSubmitting(false);
-      setShowForm(false);
-    }, 500);
+  function handlePaymentRecorded(payment: PaymentRecord) {
+    setPayments((prev) => [payment, ...prev]);
   }
 
   return (
@@ -66,19 +43,8 @@ export default function PaymentsPage() {
           <h1 className="text-2xl font-semibold">Payments</h1>
           <p className="mt-1 text-sm text-muted-foreground">Record and view payment history.</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus size={16} />
-          Record Payment
-        </Button>
+        <RecordPaymentDialog onPaymentRecorded={handlePaymentRecorded} />
       </div>
-
-      {showForm && (
-        <Card className="mt-6">
-          <CardContent>
-            <PaymentForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-          </CardContent>
-        </Card>
-      )}
 
       <div className="mt-6">
         <PaymentHistoryTable payments={payments} />

@@ -41,8 +41,8 @@ export function SummaryCards({
       <Card>
         <CardContent>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <DollarSign size={20} className="text-blue-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <DollarSign size={20} className="text-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Yearly Projection</p>

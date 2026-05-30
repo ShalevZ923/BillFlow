@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { Search, X, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
 export type DashboardFilterState = {
@@ -42,8 +43,21 @@ const priorityOptions: Array<{ label: string; value: BillPriority }> = [
 ];
 
 export function DashboardFilters({ filters, categories, tags, onFilterChange }: DashboardFiltersProps) {
+  const activeCount =
+    (filters.search ? 1 : 0) +
+    (filters.status ? 1 : 0) +
+    (filters.category ? 1 : 0) +
+    (filters.tag ? 1 : 0) +
+    (filters.priority ? 1 : 0);
+
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {activeCount > 0 && (
+        <Badge variant="outline" className="gap-1.5 px-2 py-1 text-xs text-muted-foreground">
+          <Filter size={12} />
+          {activeCount} active
+        </Badge>
+      )}
       <div className="relative w-64">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input

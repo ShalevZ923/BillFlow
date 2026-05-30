@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { format } from "date-fns";
 import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -25,6 +26,26 @@ const statusVariant: Record<OccurrenceStatus, "default" | "success" | "warning" 
   overdue: "destructive"
 };
 
+function formatDaysLabel(days: number, status: OccurrenceStatus): string {
+  if (status === "overdue") {
+    if (days === 1) return "Overdue by 1 day";
+    return `Overdue by ${days} days`;
+  }
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  return `Due in ${days} days`;
+}
+
+function formatDueDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return format(date, "MMM d, yyyy");
+  } catch {
+    return dateStr;
+  }
+}
+
 export function UpcomingList({ items }: UpcomingListProps) {
   return (
     <Card>
@@ -47,7 +68,7 @@ export function UpcomingList({ items }: UpcomingListProps) {
                   <Calendar size={16} className="text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.dueDate}</p>
+                    <p className="text-xs text-muted-foreground">{formatDueDate(item.dueDate)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -63,7 +84,7 @@ export function UpcomingList({ items }: UpcomingListProps) {
                       item.daysUntilDue <= 3 ? "text-destructive" : "text-muted-foreground"
                     )}
                   >
-                    {item.daysUntilDue}d
+                    {formatDaysLabel(item.daysUntilDue, item.status)}
                   </span>
                 </div>
               </div>

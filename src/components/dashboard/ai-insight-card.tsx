@@ -19,7 +19,7 @@ export function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiIns
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="text-primary" />
             <CardTitle>AI Insights</CardTitle>
-            <Badge variant="warning">Pro</Badge>
+            <Badge variant="default">Pro</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -27,7 +27,7 @@ export function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiIns
             Unlock daily AI-powered spending summaries and risk alerts.
           </p>
           <Link href="/pricing">
-            <Button variant="secondary">
+            <Button variant="default">
               Upgrade to Pro
               <ArrowRight size={14} />
             </Button>
