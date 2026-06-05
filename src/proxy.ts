@@ -16,12 +16,12 @@ function isPublicPath(pathname: string): boolean {
     STATIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (isPublicPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
-  let response = NextResponse.next();
+  let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +30,13 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll() { return request.cookies.getAll(); },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => response.cookies.set(name, value));
+          for (const { name, value, options } of cookiesToSet) {
+            response.cookies.set(name, value, {
+              ...options,
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production"
+            });
+          }
         }
       }
     }

@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { getEnv } from "@/lib/env";
 
@@ -11,6 +10,7 @@ const loginSchema = z.object({
 });
 
 export type LoginState = {
+  success?: boolean;
   error?: string;
   fieldErrors?: Record<string, string>;
 };
@@ -42,11 +42,11 @@ export async function loginAction(
     if (error) {
       return { error: "Invalid email or password" };
     }
+
+    return { success: true };
   } catch {
     return { error: "Connection error" };
   }
-
-  redirect("/dashboard");
 }
 
 export async function googleLoginAction(): Promise<{ url?: string; error?: string }> {

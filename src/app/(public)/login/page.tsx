@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,14 @@ import { loginAction, googleLoginAction, type LoginState } from "./actions";
 const initialState: LoginState = {};
 
 export default function Login() {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      router.replace("/dashboard");
+    }
+  }, [state.success, router]);
 
   return (
     <main className="flex min-h-[calc(100vh-72px)] items-center justify-center bg-background px-5">
