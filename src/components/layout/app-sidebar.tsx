@@ -21,6 +21,7 @@ import {
   X
 } from "lucide-react";
 import { logoutAction } from "@/app/(app)/actions";
+import { NotificationCenter } from "@/components/layout/notification-center";
 
 type NotificationCounts = Partial<Record<string, number>>;
 
@@ -121,6 +122,9 @@ export function AppSidebar({
         >
           <X size={18} />
         </button>
+      </div>
+      <div className="border-b border-border px-3 py-1 dark:border-border/60">
+        <NotificationCenter collapsed={collapsed} />
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {navItems.map((item) => {
