@@ -138,7 +138,7 @@ export default function ImportExportPage() {
   }
 
   const preview =
-    importState.phase === "preview" || importState.phase === "confirming"
+    importState.phase === "preview"
       ? importState
       : null;
 

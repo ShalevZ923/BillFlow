@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowRightLeft, TrendingUp, Globe, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowRightLeft, TrendingUp, Globe, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { mockExchangeRates } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
-import { getExchangeRates } from "./actions";
+import { getExchangeRates, refreshExchangeRates } from "./actions";
 
 function getSymbol(code: string): string {
   return currencyOptions.find((c) => c.code === code)?.symbol ?? code;
@@ -31,12 +31,22 @@ export default function CurrencyPage() {
   const [ratesLoading, setRatesLoading] = useState(true);
 
   useEffect(() => {
-    getExchangeRates().then((data) => {
+    getExchangeRates().then(async (data) => {
       if (data) {
         setRates(data.rates);
+      } else {
+        const fresh = await refreshExchangeRates();
+        if (fresh) setRates(fresh.rates);
       }
       setRatesLoading(false);
     });
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRatesLoading(true);
+    const fresh = await refreshExchangeRates();
+    if (fresh) setRates(fresh.rates);
+    setRatesLoading(false);
   }, []);
 
   const currentRates = rates ?? mockExchangeRates;
@@ -185,24 +195,37 @@ export default function CurrencyPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-dashed">
+          <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <TrendingUp size={18} className="text-primary" />
                 <CardTitle>Live Rates</CardTitle>
-                <Badge>Pro</Badge>
+                <Badge variant="secondary" className="gap-1 text-[10px]">
+                  <span className={`h-1.5 w-1.5 rounded-full ${rates ? "bg-green-400" : "bg-muted-foreground"}`} />
+                  {rates ? "Active" : "Demo"}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Upgrade to Pro for live exchange rates that refresh every 6 hours.
-                Free users see demo rates.
+                {rates
+                  ? "Rates are sourced from exchangerate.host (free tier)."
+                  : "Could not load live rates. Using demonstration rates."}
               </p>
-              <Link href="/pricing" className="inline-block mt-3">
-                <Button size="sm">
-                  Upgrade to Pro
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={handleRefresh}
+                disabled={ratesLoading}
+              >
+                {ratesLoading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={14} />
+                )}
+                <span className="ml-1">{ratesLoading ? "Loading..." : "Refresh Rates"}</span>
+              </Button>
             </CardContent>
           </Card>
         </div>

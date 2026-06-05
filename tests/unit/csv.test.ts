@@ -109,6 +109,7 @@ describe("CSV export", () => {
   const bills: BillInput[] = [
     {
       name: "AWS Invoice",
+      vendor: "Amazon",
       amountCents: 12050,
       currency: "USD",
       dueDate: "2026-06-15",
@@ -145,6 +146,7 @@ describe("CSV export", () => {
   it("escapes double quotes in notes during export", () => {
     const billWithQuotes: BillInput = {
       name: "Test",
+      vendor: "",
       amountCents: 1000,
       currency: "USD",
       dueDate: "2026-06-15",

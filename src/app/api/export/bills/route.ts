@@ -20,27 +20,19 @@ export async function GET() {
       .from(bills)
       .where(eq(bills.userId, user.id));
 
-    const billInputs: BillInput[] = userBills.map((bill) => {
-      const dueDateStr =
-        typeof bill.firstDueDate === "string"
-          ? bill.firstDueDate
-          : bill.firstDueDate instanceof Date
-            ? bill.firstDueDate.toISOString().slice(0, 10)
-            : String(bill.firstDueDate);
-
-      return {
-        name: bill.name,
-        amountCents: bill.amountCents,
-        currency: bill.currency as CurrencyCode,
-        dueDate: dueDateStr,
-        cycle: bill.cycle as BillingCycle,
-        category: bill.category,
-        priority: bill.priority as BillPriority,
-        status: "unpaid" as BillInput["status"],
-        tags: bill.tags,
-        notes: bill.notes
-      };
-    });
+    const billInputs: BillInput[] = userBills.map((bill) => ({
+      name: bill.name,
+      vendor: bill.vendor ?? "",
+      amountCents: bill.amountCents,
+      currency: bill.currency as CurrencyCode,
+      dueDate: String(bill.firstDueDate),
+      cycle: bill.cycle as BillingCycle,
+      category: bill.category,
+      priority: bill.priority as BillPriority,
+      status: "unpaid" as BillInput["status"],
+      tags: bill.tags,
+      notes: bill.notes
+    }));
 
     const csv = generateBillCsv(billInputs);
 
