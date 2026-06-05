@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +14,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { currencyOptions } from "@/lib/currency/supported";
+import type { CurrencyCode } from "@/lib/billing/types";
+import { completeOnboarding } from "./actions";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -22,6 +24,8 @@ export default function OnboardingPage() {
   const [currency, setCurrency] = useState("USD");
   const [tags, setTags] = useState("");
   const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const steps = [
     {
@@ -42,13 +46,31 @@ export default function OnboardingPage() {
     }
   ];
 
-  function handleNext() {
+  const handleNext = useCallback(async () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      router.push("/dashboard");
+      setSaving(true);
+      setError(null);
+      try {
+        const result = await completeOnboarding({
+          name,
+          defaultCurrency: currency as CurrencyCode,
+          tags,
+          emailRemindersEnabled: remindersEnabled
+        });
+        if (result.success) {
+          router.push("/dashboard");
+        } else {
+          setError(result.message);
+        }
+      } catch {
+        setError("Failed to save onboarding data");
+      } finally {
+        setSaving(false);
+      }
     }
-  }
+  }, [step, steps.length, name, currency, tags, remindersEnabled, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
@@ -104,11 +126,15 @@ export default function OnboardingPage() {
               <span className="text-sm">Enable email reminders</span>
             </label>
               )}
+
+          {error && (
+            <p className="mt-3 text-sm text-destructive">{error}</p>
+          )}
         </CardContent>
 
         <CardFooter className="justify-end">
-          <Button onClick={handleNext}>
-            {step < steps.length - 1 ? "Next" : "Go to Dashboard"}
+          <Button onClick={handleNext} disabled={saving}>
+            {saving ? "Saving..." : step < steps.length - 1 ? "Next" : "Go to Dashboard"}
             <ArrowRight size={16} />
           </Button>
         </CardFooter>
