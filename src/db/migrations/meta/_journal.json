@@ -15,6 +15,13 @@
       "when": 1780054651176,
       "tag": "0001_luxuriant_carlie_cooper",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780663526896,
+      "tag": "0002_modern_sabretooth",
+      "breakpoints": true
     }
   ]
 }

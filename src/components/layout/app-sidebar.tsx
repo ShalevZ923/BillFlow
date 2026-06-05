@@ -15,10 +15,12 @@ import {
   Settings,
   Moon,
   Sun,
+  LogOut,
   ChevronLeft,
   ChevronRight,
   X
 } from "lucide-react";
+import { logoutAction } from "@/app/(app)/actions";
 
 type NotificationCounts = Partial<Record<string, number>>;
 
@@ -173,6 +175,19 @@ export function AppSidebar({
           {mounted && dark ? <Sun size={18} /> : <Moon size={18} />}
           {!collapsed && (mounted ? (dark ? "Light Mode" : "Dark Mode") : "Theme")}
         </button>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            aria-label="Sign out"
+            className={clsx(
+              "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut size={18} />
+            {!collapsed && "Sign Out"}
+          </button>
+        </form>
       </div>
     </aside>
   );

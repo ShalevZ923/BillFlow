@@ -136,13 +136,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Bar */}
+      {/* Product Benefits Bar */}
       <section className="border-y border-border bg-white dark:bg-card">
         <div className="mx-auto flex max-w-4xl divide-x divide-border">
           {[
-            { value: "2,400+", label: "businesses use BillFlow" },
-            { value: "85,000+", label: "bills tracked monthly" },
-            { value: "99.8%", label: "platform uptime" }
+            { value: "Unlimited bills", label: "on Pro plan" },
+            { value: "Due date reminders", label: "never miss a payment" },
+            { value: "CSV import & export", label: "easy data migration" }
           ].map((stat, i) => (
             <div key={i} className="flex-1 px-6 py-8 text-center">
               <p className="text-2xl font-bold">{stat.value}</p>
@@ -364,36 +364,47 @@ export default function Home() {
                 Smart bill management by SeeHy Labs.
               </p>
             </div>
-            {[
-              {
-                title: "Product",
-                links: ["Features", "Pricing", "Changelog", "API"]
-              },
-              {
-                title: "Resources",
-                links: ["Documentation", "Guides", "Blog", "Support"]
-              },
-              {
-                title: "Company",
-                links: ["About", "Privacy", "Terms", "Contact"]
-              }
-            ].map((group) => (
-              <div key={group.title}>
-                <p className="text-sm font-semibold">{group.title}</p>
-                <ul className="mt-3 space-y-2">
-                  {group.links.map((link) => (
-                    <li key={link}>
-                      <Link
-                        href="#"
-                        className="text-sm text-muted-foreground transition hover:text-foreground"
-                      >
-                        {link}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <div>
+              <p className="text-sm font-semibold">Product</p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link href="/features" className="text-sm text-muted-foreground transition hover:text-foreground">
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pricing" className="text-sm text-muted-foreground transition hover:text-foreground">
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Resources</p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link href="/privacy" className="text-sm text-muted-foreground transition hover:text-foreground">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="text-sm text-muted-foreground transition hover:text-foreground">
+                    Terms
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Company</p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <span className="text-sm text-muted-foreground">About — Coming soon</span>
+                </li>
+                <li>
+                  <span className="text-sm text-muted-foreground">Contact — Coming soon</span>
+                </li>
+              </ul>
+            </div>
           </div>
           <div className="mt-10 border-t border-border pt-6 text-center">
             <p className="text-xs text-muted-foreground">
