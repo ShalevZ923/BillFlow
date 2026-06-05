@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { CookieOptions } from "@supabase/ssr";
 
 const PUBLIC_PATHS = [
   "/login", "/signup", "/auth", "/forgot-password",
@@ -16,12 +17,23 @@ function isPublicPath(pathname: string): boolean {
     STATIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+function mapProxyCookieOptions(options: CookieOptions) {
+  return {
+    domain: options.domain,
+    path: options.path ?? "/",
+    maxAge: options.maxAge,
+    sameSite: (options.sameSite as "lax" | "strict" | "none") ?? "lax",
+    secure: options.secure ?? process.env.NODE_ENV === "production",
+    httpOnly: options.httpOnly ?? true
+  };
+}
+
 export async function proxy(request: NextRequest) {
   if (isPublicPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
-  let response = NextResponse.next({ request });
+  const response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,11 +43,7 @@ export async function proxy(request: NextRequest) {
         getAll() { return request.cookies.getAll(); },
         setAll(cookiesToSet) {
           for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, {
-              ...options,
-              sameSite: "lax",
-              secure: process.env.NODE_ENV === "production"
-            });
+            response.cookies.set(name, value, mapProxyCookieOptions(options));
           }
         }
       }
