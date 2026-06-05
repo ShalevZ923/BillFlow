@@ -30,6 +30,9 @@ The Intake Center (`/intake`) is fully mock-driven with non-functional Connect/E
 
 **File:** `src/app/(app)/intake/page.tsx`
 
+**Pro tier gate:** The Intake Center is a Pro-tier feature. On load, check the user's plan from `profiles.plan`. If `"free"`, render an upsell card (lock icon, "Intake Center is a Pro feature", "Upgrade to Pro" button linking to `/pricing`) instead of the intake content. If `"pro"`, render the full page as below.
+
+**Pro tier content:**
 - Add `<WorkInProgressBanner />` at top of page
 - Add `useComingSoon` hook for toast management
 - "Connect" buttons on source cards → `onClick={() => showComingSoon("Source connections are coming soon!")}`
@@ -38,6 +41,8 @@ The Intake Center (`/intake`) is fully mock-driven with non-functional Connect/E
 - "Dismiss" button → `onClick={() => showComingSoon("Bill dismissal is coming soon!")}`
 - Replace inline `src.comingSoon` badge rendering with `<ComingSoonBadge />`
 - Mock data stays; no backend changes
+
+**Sidebar:** Add a "Pro" badge next to the Intake Center nav item in the sidebar (`src/components/layout/app-sidebar.tsx`).
 
 ### 3. Dashboard Quick Actions
 
@@ -84,6 +89,8 @@ Replace `useState<"free" | "pro">("free")` with:
 
 **In scope:**
 - Reusable `useComingSoon` hook, `ComingSoonBadge`, `WorkInProgressBanner`
+- Pro tier gate on Intake Center (free users see upsell, pro users see WIP content)
+- Pro badge on Intake Center sidebar nav item
 - Wire Intake Center buttons to Coming Soon toasts
 - Wire Dashboard Quick Actions to navigation
 - Wire Export CSV to download
