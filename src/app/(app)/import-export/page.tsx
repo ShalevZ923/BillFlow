@@ -48,6 +48,8 @@ export default function ImportExportPage() {
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [billCount, setBillCount] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     getBillCount().then(setBillCount);
@@ -137,6 +139,28 @@ export default function ImportExportPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  async function handleExport() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await fetch("/api/export/bills");
+      if (!res.ok) throw new Error("Failed to export bills");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "bills-export.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError("Failed to export bills. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const preview =
     importState.phase === "preview"
       ? importState
@@ -193,11 +217,21 @@ export default function ImportExportPage() {
                   </p>
                 </div>
               </div>
-              <Button size="sm">
-                <Download size={14} />
-                Export CSV
+              <Button size="sm" onClick={handleExport} disabled={exporting}>
+                {exporting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Download size={14} />
+                )}
+                {exporting ? "Exporting..." : "Export CSV"}
               </Button>
             </div>
+            {exportError && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertTriangle size={14} />
+                {exportError}
+              </div>
+            )}
           </CardContent>
         </Card>
 
