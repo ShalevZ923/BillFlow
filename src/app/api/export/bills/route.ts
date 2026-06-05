@@ -1,30 +1,53 @@
 import { NextResponse } from "next/server";
-import { exportBillsToCsv } from "@/lib/csv/export";
+import { eq } from "drizzle-orm";
+import { getCurrentUser } from "@/lib/auth/server";
+import { createDb } from "@/db/client";
+import { bills } from "@/db/schema";
+import { generateBillCsv } from "@/lib/csv/import";
+import type { CurrencyCode, BillingCycle, BillPriority, BillInput } from "@/lib/billing/types";
 
 export async function GET() {
   try {
-    // Placeholder: in production, load user bills from DB
-    const exportedBills = [
-      {
-        name: "Example Bill",
-        amountCents: 10000,
-        currency: "USD" as const,
-        dueDate: "2026-06-15",
-        cycle: "monthly" as const,
-        category: "Other",
-        priority: "medium" as const,
-        status: "unpaid" as const,
-        tags: ["example"],
-        notes: "Sample export"
-      }
-    ];
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const csv = exportBillsToCsv(exportedBills);
+    const db = createDb();
+
+    const userBills = await db
+      .select()
+      .from(bills)
+      .where(eq(bills.userId, user.id));
+
+    const billInputs: BillInput[] = userBills.map((bill) => {
+      const dueDateStr =
+        typeof bill.firstDueDate === "string"
+          ? bill.firstDueDate
+          : bill.firstDueDate instanceof Date
+            ? bill.firstDueDate.toISOString().slice(0, 10)
+            : String(bill.firstDueDate);
+
+      return {
+        name: bill.name,
+        amountCents: bill.amountCents,
+        currency: bill.currency as CurrencyCode,
+        dueDate: dueDateStr,
+        cycle: bill.cycle as BillingCycle,
+        category: bill.category,
+        priority: bill.priority as BillPriority,
+        status: "unpaid" as BillInput["status"],
+        tags: bill.tags,
+        notes: bill.notes
+      };
+    });
+
+    const csv = generateBillCsv(billInputs);
 
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": 'attachment; filename="billflow-export.csv"'
+        "Content-Disposition": 'attachment; filename="bills-export.csv"'
       }
     });
   } catch (error) {
