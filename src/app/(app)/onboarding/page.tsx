@@ -81,6 +81,29 @@ export default function OnboardingPage() {
     }
   }, [name, currency, tags, remindersEnabled, router]);
 
+  const handleExit = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await completeOnboarding({
+        name: name || "User",
+        defaultCurrency: currency as CurrencyCode,
+        tags,
+        emailRemindersEnabled: remindersEnabled,
+        seedSampleData: false
+      });
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError("Failed to save onboarding data");
+    } finally {
+      setSaving(false);
+    }
+  }, [name, currency, tags, remindersEnabled, router]);
+
   const handleNext = useCallback(async () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
@@ -112,11 +135,22 @@ export default function OnboardingPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <p className="text-sm text-muted-foreground">
-            Step {step + 1} of {steps.length}
-          </p>
-          <CardTitle>{steps[step]?.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{steps[step]?.description}</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Step {step + 1} of {steps.length}
+              </p>
+              <CardTitle>{steps[step]?.title}</CardTitle>
+              <p className="text-sm text-muted-foreground">{steps[step]?.description}</p>
+            </div>
+            <button
+              onClick={handleExit}
+              disabled={saving}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {saving ? "Saving..." : "Exit →"}
+            </button>
+          </div>
         </CardHeader>
 
         <CardContent>
