@@ -32,21 +32,13 @@ export default function CurrencyPage() {
   const [ratesUpdatedAt, setRatesUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadRates() {
-      const fresh = await refreshExchangeRates();
-      if (fresh) {
-        setRates(fresh.rates);
-        setRatesUpdatedAt(fresh.updatedAt);
-      } else {
-        const cached = await getExchangeRates();
-        if (cached) {
-          setRates(cached.rates);
-          setRatesUpdatedAt(cached.updatedAt);
-        }
+    getExchangeRates().then((cached) => {
+      if (cached) {
+        setRates(cached.rates);
+        setRatesUpdatedAt(cached.updatedAt);
       }
       setRatesLoading(false);
-    }
-    loadRates();
+    });
   }, []);
 
   const handleRefresh = useCallback(async () => {

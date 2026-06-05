@@ -18,7 +18,7 @@ const envSchema = z.object({
   VAPID_PUBLIC_KEY: optionalString,
   VAPID_PRIVATE_KEY: optionalString,
   CRON_SECRET: optionalString,
-  EXCHANGE_RATE_API_URL: z.string().url().default("https://api.exchangerate.host/latest")
+  EXCHANGE_RATE_API_URL: z.string().url().default("https://v6.exchangerate-api.com/v6/YOUR_API_KEY/latest/USD")
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

@@ -26,13 +26,17 @@ export async function GET(request: Request) {
     }
 
     const data = (await response.json()) as {
-      base: string;
+      result?: string;
+      base_code?: string;
+      base?: string;
       date: string;
       rates: Record<string, number>;
     };
 
+    const ratesBase = data.base_code ?? data.base ?? "USD";
+
     const supportedCodes: CurrencyCode[] = ["USD", "EUR", "GBP", "ILS"];
-    const base = (supportedCodes.includes(data.base as CurrencyCode) ? data.base : "USD") as CurrencyCode;
+    const base = (supportedCodes.includes(ratesBase as CurrencyCode) ? ratesBase : "USD") as CurrencyCode;
     const filteredRates: Record<CurrencyCode, number> = {} as Record<CurrencyCode, number>;
     for (const code of supportedCodes) {
       if (data.rates[code] === undefined) {

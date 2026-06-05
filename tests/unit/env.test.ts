@@ -6,7 +6,7 @@ describe("getEnv", () => {
     const env = getEnv({});
 
     expect(env.NEXT_PUBLIC_APP_URL).toBe("http://localhost:3000");
-    expect(env.EXCHANGE_RATE_API_URL).toBe("https://api.exchangerate.host/latest");
+    expect(env.EXCHANGE_RATE_API_URL).toBe("https://v6.exchangerate-api.com/v6/YOUR_API_KEY/latest/USD");
   });
 
   it("rejects invalid urls", () => {

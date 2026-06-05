@@ -42,12 +42,16 @@ export async function refreshExchangeRates(): Promise<ExchangeRateData | null> {
     }
 
     const data = (await response.json()) as {
-      base: string;
+      result?: string;
+      base_code?: string;
+      base?: string;
       rates: Record<string, number>;
     };
 
+    const ratesBase = data.base_code ?? data.base ?? "USD";
+
     const supportedCodes: CurrencyCode[] = ["USD", "EUR", "GBP", "ILS"];
-    const base = (supportedCodes.includes(data.base as CurrencyCode) ? data.base : "USD") as CurrencyCode;
+    const base = (supportedCodes.includes(ratesBase as CurrencyCode) ? ratesBase : "USD") as CurrencyCode;
     const rates: Record<string, number> = {};
 
     for (const code of supportedCodes) {
