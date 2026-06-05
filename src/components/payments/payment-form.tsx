@@ -23,13 +23,15 @@ type PaymentFormProps = {
   isSubmitting?: boolean;
   occurrenceId?: string;
   currency?: string;
+  billLabel?: string;
 };
 
 export function PaymentForm({
   onSubmit,
   isSubmitting,
   occurrenceId = "",
-  currency = "USD"
+  currency = "USD",
+  billLabel
 }: PaymentFormProps) {
   const {
     register,
@@ -51,6 +53,13 @@ export function PaymentForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <input type="hidden" {...register("occurrenceId")} />
       <input type="hidden" {...register("paidCurrency")} />
+
+      {billLabel && (
+        <div className="rounded-md border border-border bg-muted/50 px-3 py-2">
+          <span className="text-sm text-muted-foreground">Paying: </span>
+          <span className="text-sm font-medium">{billLabel}</span>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

@@ -1,36 +1,44 @@
 "use client";
 
-import { useState } from "react";
-import { RecordPaymentDialog, type PaymentRecord } from "@/components/payments/record-payment-dialog";
-import { PaymentHistoryTable } from "@/components/payments/payment-history-table";
-
-const mockPayments: PaymentRecord[] = [
-  {
-    id: "pay-1",
-    billName: "Adobe Creative Cloud",
-    category: "SaaS",
-    paidAmountCents: 5999,
-    paidCurrency: "USD",
-    paidDate: "2026-04-15",
-    method: "card",
-    note: "Paid from business card",
-    status: "paid"
-  },
-  {
-    id: "pay-2",
-    billName: "Internet Provider",
-    category: "Utilities",
-    paidAmountCents: 8999,
-    paidCurrency: "USD",
-    paidDate: "2026-05-01",
-    method: "bank",
-    note: "",
-    status: "paid"
-  }
-];
+import { useState, useEffect, useCallback } from "react";
+import { RecordPaymentDialog } from "@/components/payments/record-payment-dialog";
+import { PaymentHistoryTable, type PaymentRecord } from "@/components/payments/payment-history-table";
+import { Loader2 } from "lucide-react";
+import { getPayments } from "./actions";
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<PaymentRecord[]>(mockPayments);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPayments = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getPayments();
+      setPayments(
+        data.map((d) => ({
+          id: d.id,
+          billName: d.billName,
+          category: d.category,
+          paidAmountCents: d.paidAmountCents,
+          paidCurrency: d.paidCurrency,
+          paidDate: d.paidDate,
+          method: d.method,
+          note: d.note,
+          status: d.status
+        }))
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load payments");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPayments();
+  }, [loadPayments]);
 
   function handlePaymentRecorded(payment: PaymentRecord) {
     setPayments((prev) => [payment, ...prev]);
@@ -47,7 +55,24 @@ export default function PaymentsPage() {
       </div>
 
       <div className="mt-6">
-        <PaymentHistoryTable payments={payments} />
+        {loading ? (
+          <div className="flex items-center justify-center rounded-lg border border-border bg-white p-12">
+            <Loader2 size={20} className="animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading payments...</span>
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-12 text-center">
+            <p className="text-sm text-destructive">{error}</p>
+            <button
+              onClick={loadPayments}
+              className="mt-3 text-sm font-medium text-primary hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : (
+          <PaymentHistoryTable payments={payments} />
+        )}
       </div>
     </div>
   );
