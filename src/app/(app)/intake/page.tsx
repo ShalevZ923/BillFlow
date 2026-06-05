@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Mail, Plus, X, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Mail, Plus, X, Check, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ComingSoonBadge } from "@/components/ui/coming-soon-badge";
+import { WorkInProgressBanner } from "@/components/ui/work-in-progress-banner";
+import { useComingSoon } from "@/hooks/use-coming-soon";
 import { mockIntakeSources, mockDetectedBills } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
+import { getUserPlan } from "./actions";
+import Link from "next/link";
 
 function formatCents(c: number): string {
   return (c / 100).toFixed(2);
@@ -19,26 +25,58 @@ function formatCurrency(c: number, code: string): string {
 }
 
 export default function IntakePage() {
-  const [detected, setDetected] = useState(mockDetectedBills);
+  const [detected] = useState(mockDetectedBills);
+  const [plan, setPlan] = useState<"free" | "pro" | null>(null);
+  const { toastElement, showComingSoon } = useComingSoon();
 
-  function handleApprove(id: string) {
-    setDetected((prev) => prev.filter((d) => d.id !== id));
+  useEffect(() => {
+    getUserPlan().then(setPlan);
+  }, []);
+
+  function handleApprove() {
+    showComingSoon("Bill approval workflow is coming soon!");
   }
 
-  function handleDismiss(id: string) {
-    setDetected((prev) => prev.filter((d) => d.id !== id));
+  function handleDismiss() {
+    showComingSoon("Bill dismissal is coming soon!");
   }
+
+  if (plan === "free") {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <Lock size={24} className="text-muted-foreground" />
+        </div>
+        <h1 className="text-xl font-bold tracking-tight">Intake Center</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          The Intake Center is a Pro feature. Upgrade your plan to connect
+          bill sources and automate bill detection.
+        </p>
+        <Link href="/pricing" className="mt-6">
+          <Button>
+            Upgrade to Pro
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (plan === null) return null;
 
   return (
     <div>
+      <WorkInProgressBanner />
+
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Intake Center</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Intake Center{" "}
+          <Badge variant="warning" className="ml-2 align-middle">In Progress</Badge>
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Connect your bill sources and manage detected bills in one place.
         </p>
       </div>
 
-      {/* Source Cards */}
       <h2 className="text-lg font-semibold mb-4">Connected Sources</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
         {mockIntakeSources.map((src) => (
@@ -53,17 +91,25 @@ export default function IntakePage() {
               <div>
                 <p className="text-sm font-semibold">{src.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {src.connected ? `${src.billsFound} bills found` : "Not connected"}
+                  {src.connected
+                    ? `${src.billsFound} bills found`
+                    : "Not connected"}
                 </p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">{src.description}</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              {src.description}
+            </p>
             {src.comingSoon ? (
-              <span className="inline-block rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground dark:bg-muted/50">
-                Coming soon
-              </span>
+              <ComingSoonBadge />
             ) : (
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  showComingSoon("Source connections are coming soon!")
+                }
+              >
                 <Plus size={12} />
                 Connect
               </Button>
@@ -72,7 +118,6 @@ export default function IntakePage() {
         ))}
       </div>
 
-      {/* Detected Bills */}
       <h2 className="text-lg font-semibold mb-4">
         Detected Bills{" "}
         {detected.length > 0 && (
@@ -97,7 +142,9 @@ export default function IntakePage() {
                   <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-muted/50">
                     {det.source}
                   </span>
-                  <span className="text-sm font-medium truncate">{det.vendor}</span>
+                  <span className="text-sm font-medium truncate">
+                    {det.vendor}
+                  </span>
                   <span className="text-sm font-semibold whitespace-nowrap">
                     {formatCurrency(det.amountCents, det.currency)}
                   </span>
@@ -127,18 +174,21 @@ export default function IntakePage() {
                       Possible duplicate
                     </span>
                   )}
-                  <Button
-                    size="xs"
-                    onClick={() => handleApprove(det.id)}
-                  >
+                  <Button size="xs" onClick={handleApprove}>
                     <Check size={12} />
                     Approve
                   </Button>
-                  <Button variant="outline" size="xs">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() =>
+                      showComingSoon("Inline editing is coming soon!")
+                    }
+                  >
                     Edit
                   </Button>
                   <button
-                    onClick={() => handleDismiss(det.id)}
+                    onClick={handleDismiss}
                     className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-muted/50"
                     aria-label="Dismiss"
                   >
@@ -153,6 +203,8 @@ export default function IntakePage() {
           Mock detected bills — real intake requires connected sources.
         </p>
       </div>
+
+      {toastElement}
     </div>
   );
 }
