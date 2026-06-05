@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Upload, Globe, Calculator, Check, AlertTriangle } from "lucide-react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
@@ -181,6 +182,8 @@ export function DashboardContent() {
     tag: null,
     priority: null
   });
+
+  const router = useRouter();
 
   const fetchData = useCallback(async (searchQuery?: string) => {
     setLoading(true);
@@ -411,13 +414,14 @@ export function DashboardContent() {
             <h3 className="text-sm font-semibold mb-3">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: Plus, label: "Add Bill" },
-                { icon: Upload, label: "Import" },
-                { icon: Globe, label: "Convert" },
-                { icon: Calculator, label: "Calculate" }
+                { icon: Plus, label: "Add Bill", href: "/bills" },
+                { icon: Upload, label: "Import", href: "/import-export" },
+                { icon: Globe, label: "Convert", href: "/currency" },
+                { icon: Calculator, label: "Calculate", href: "/calculator" }
               ].map((action) => (
                 <button
                   key={action.label}
+                  onClick={() => router.push(action.href)}
                   className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-background p-3 text-xs font-medium transition hover:bg-muted hover:border-primary/30 dark:bg-muted/20"
                 >
                   <action.icon size={16} className="text-primary" />
