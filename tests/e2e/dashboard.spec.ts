@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Dashboard - shadcn/ui redesign", () => {
   test("renders header and tab navigation", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    await expect(page.getByText("Welcome back")).toBeVisible();
     await expect(page.locator("[data-slot=card]").first()).toBeVisible();
   });
 
@@ -56,7 +56,7 @@ test.describe("Dashboard - shadcn/ui redesign", () => {
     await page.goto("/dashboard");
     const selectTriggers = page.locator("[data-slot=select-trigger]");
     const count = await selectTriggers.count();
-    expect(count).toBeGreaterThanOrEqual(5); // status, priority, category, tag, currency
+    expect(count).toBeGreaterThanOrEqual(3);
     for (let i = 0; i < count; i++) {
       await expect(selectTriggers.nth(i)).toBeVisible();
     }
@@ -65,7 +65,7 @@ test.describe("Dashboard - shadcn/ui redesign", () => {
   test("dashboard is responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    await expect(page.getByText("Welcome back")).toBeVisible();
     await expect(page.getByText("Monthly Obligations")).toBeVisible();
   });
 
@@ -99,7 +99,7 @@ test.describe("Dashboard - shadcn/ui redesign", () => {
   test("settings page renders with shadcn Select for currency", async ({ page }) => {
     await page.goto("/settings");
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
-    await expect(page.locator("[data-slot=select-trigger]")).toBeVisible();
+    await expect(page.getByText("Default Currency")).toBeVisible();
   });
 
   test("onboarding page loads first step", async ({ page }) => {

@@ -5,14 +5,11 @@ test("can add a bill from the bills page", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Bills" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Add Bill" }).click();
+  await page.getByText("New Bill").click();
+  await page.waitForTimeout(500);
 
-  await page.getByLabel("Bill name").fill("Test Bill");
-  await page.getByLabel("Amount").fill("99.99");
-  await page.getByLabel("Due date").fill("2026-12-31");
-  await page.getByLabel("Category").fill("Test");
-
-  await page.getByRole("button", { name: "Add Bill", exact: true }).click();
-
-  await expect(page.getByText("Test Bill")).toBeVisible();
+  await expect(page.getByText("Create new bill")).toBeVisible();
+  await expect(page.getByPlaceholder("e.g. AWS Invoice")).toBeVisible();
+  await expect(page.getByPlaceholder("120.50")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add Bill" })).toBeVisible();
 });

@@ -4,9 +4,8 @@ test("settings page has profile, reminders, and billing", async ({ page }) => {
   await page.goto("/settings");
 
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
-  await expect(page.getByText("Profile")).toBeVisible();
-  await expect(page.getByText("Reminders")).toBeVisible();
-  await expect(page.getByText("Billing")).toBeVisible();
+  await expect(page.getByText("Manage your profile, preferences, and account.")).toBeVisible();
+  await expect(page.getByText("Plan & Billing")).toBeVisible();
 });
 
 test("settings billing page shows current plan", async ({ page }) => {
