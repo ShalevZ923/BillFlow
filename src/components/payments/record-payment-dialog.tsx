@@ -5,7 +5,6 @@ import { PaymentForm, type PaymentFormValues } from "@/components/payments/payme
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";

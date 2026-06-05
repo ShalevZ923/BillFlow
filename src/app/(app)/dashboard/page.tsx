@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Upload, Globe, Calculator, Check, AlertTriangle, TrendingUp } from "lucide-react";
+import { Plus, Upload, Globe, Calculator, Check, AlertTriangle } from "lucide-react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthlyBreakdown } from "@/components/dashboard/monthly-breakdown";
@@ -12,8 +12,6 @@ import { DashboardCurrencySelector } from "@/components/currency/dashboard-curre
 import { BillList, type BillListItem } from "@/components/bills/bill-list";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 import {
   mockBills,
@@ -90,7 +88,6 @@ const activityColors: Record<string, string> = {
 export default function DashboardPage() {
   const [currency, setCurrency] = useState("USD");
   const [period, setPeriod] = useState("overview");
-  const [loading, setLoading] = useState(false);
   const [bills, setBills] = useState<BillListItem[]>(mockBillListItems);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
@@ -111,7 +108,7 @@ export default function DashboardPage() {
       if (filters.priority && bill.priority !== filters.priority) return false;
       return true;
     });
-  }, [filters.status, filters.category, filters.tag, filters.priority]);
+  }, [bills, filters.status, filters.category, filters.tag, filters.priority]);
 
   const periodFiltered = useMemo(
     () => filterBillsByPeriod(nonSearchFiltered, period),
@@ -155,14 +152,7 @@ export default function DashboardPage() {
       </Tabs>
 
       {/* Summary Cards */}
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[88px] rounded-xl" />
-          ))}
-        </div>
-      ) : (
-        <SummaryCards
+      <SummaryCards
           monthlyObligationsCents={mockDashboardSummary.monthlyObligationsCents}
           yearlyProjectionCents={mockDashboardSummary.yearlyProjectionCents}
           pendingCount={mockDashboardSummary.pendingCount}
@@ -170,7 +160,7 @@ export default function DashboardPage() {
           overdueCount={mockDashboardSummary.overdueCount}
           overdueAmountCents={mockDashboardSummary.overdueAmountCents}
         />
-      )}
+      
 
       {/* Charts + Upcoming + Quick Actions */}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">

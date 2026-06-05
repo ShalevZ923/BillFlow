@@ -9,16 +9,8 @@ import Link from "next/link";
 import { mockExchangeRates } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
 
-function formatCents(c: number): string {
-  return (c / 100).toFixed(2);
-}
-
 function getSymbol(code: string): string {
   return currencyOptions.find((c) => c.code === code)?.symbol ?? code;
-}
-
-function formatCurrency(amount: number, code: string): string {
-  return `${getSymbol(code)}${amount.toFixed(2)}`;
 }
 
 const currencies = currencyOptions;
@@ -35,10 +27,8 @@ export default function CurrencyPage() {
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("EUR");
 
-  const fromSymbol = getSymbol(fromCurrency);
-  const toSymbol = getSymbol(toCurrency);
-
   const numAmount = parseFloat(amount) || 0;
+  const toSymbol = getSymbol(toCurrency);
   const rate =
     mockExchangeRates[toCurrency] && mockExchangeRates[fromCurrency]
       ? mockExchangeRates[toCurrency] / mockExchangeRates[fromCurrency]

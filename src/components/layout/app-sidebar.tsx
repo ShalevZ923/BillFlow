@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useSyncExternalStore, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -49,30 +49,47 @@ export function AppSidebar({
   onMobileClose
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const [dark, setDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const getDarkSnapshot = useCallback(() => {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  }, []);
+
+  const darkSubscribe = useCallback((callback: () => void) => {
+    window.addEventListener("storage", callback);
+    window.addEventListener("themechange", callback);
+    return () => {
+      window.removeEventListener("storage", callback);
+      window.removeEventListener("themechange", callback);
+    };
+  }, []);
+
+  const dark = useSyncExternalStore(darkSubscribe, getDarkSnapshot, () => false);
 
   useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem("theme");
     if (stored === "dark") {
-      setDark(true);
       document.documentElement.classList.add("dark");
+      window.dispatchEvent(new CustomEvent("themechange"));
     }
   }, []);
 
   const toggleTheme = () => {
-    setDark((prev) => {
-      const next = !prev;
-      if (next) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-      }
-      return next;
-    });
+    const next = !getDarkSnapshot();
+    if (next) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+    window.dispatchEvent(new CustomEvent("themechange"));
   };
 
   return (

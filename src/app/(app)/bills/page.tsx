@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Calendar } from "lucide-react";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { mockBills } from "@/lib/mock/data";
-import type { OccurrenceStatus, BillPriority, CurrencyCode } from "@/lib/billing/types";
+import type { OccurrenceStatus, CurrencyCode } from "@/lib/billing/types";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { BillListItem } from "@/components/bills/bill-list";
 

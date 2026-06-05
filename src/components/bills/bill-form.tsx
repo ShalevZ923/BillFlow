@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { billingCycles, billPriorities } from "@/lib/billing/types";
@@ -48,7 +48,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    control
   } = useForm<BillFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,7 +65,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
     }
   });
 
-  const cycle = watch("cycle");
+  const cycle = useWatch({ control, name: "cycle" }) as BillingCycle;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

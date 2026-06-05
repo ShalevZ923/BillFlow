@@ -5,7 +5,6 @@ import { BillForm } from "@/components/bills/bill-form";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";

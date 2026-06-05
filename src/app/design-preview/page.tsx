@@ -7,30 +7,23 @@ import {
   ChevronRight,
   CreditCard,
   DollarSign,
-  Download,
   FileText,
   Inbox,
   LayoutDashboard,
   Lightbulb,
+  Moon,
   Plus,
   Search,
   TrendingUp,
   Upload,
   X,
-  ShieldCheck,
   Zap,
-  Users,
-  BarChart3,
   Calculator,
   Calendar,
   Clock,
   AlertTriangle,
   Globe,
   Mail,
-  Star,
-  Moon,
-  Sun,
-  ChevronLeft,
   Settings
 } from "lucide-react";
 import {
@@ -45,8 +38,7 @@ import {
   mockIntakeSources,
   mockDetectedBills,
   mockUserProfile,
-  type MockBill,
-  type MockUpcomingItem
+  type MockBill
 } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
 
@@ -75,7 +67,6 @@ const sections = [
 export default function DesignPreview() {
   const [activeSection, setActiveSection] = useState("public");
   const [showModal, setShowModal] = useState(false);
-  const [showIntakeModal, setShowIntakeModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

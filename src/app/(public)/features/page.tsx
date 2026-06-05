@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   FileText, Lightbulb, DollarSign, Calculator, Upload, Inbox,
-  Sparkles, ArrowRight, Check, Zap
+  ArrowRight, Check, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

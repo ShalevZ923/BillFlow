@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { format, parse } from "date-fns";
 import {
   BarChart,
@@ -29,8 +29,11 @@ type MonthlyBreakdownProps = {
 };
 
 export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   if (monthlyBreakdown.length === 0) {
     return (
