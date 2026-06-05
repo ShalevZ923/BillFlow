@@ -39,7 +39,7 @@ export function AppShell({ children }: AppShellProps) {
       <AppSidebar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed(!collapsed)}
-        notificationCounts={{ dashboard: 2, bills: 3 }}
+        notificationCounts={{}}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

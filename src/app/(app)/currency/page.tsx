@@ -29,23 +29,33 @@ export default function CurrencyPage() {
   const [toCurrency, setToCurrency] = useState("EUR");
   const [rates, setRates] = useState<Record<string, number> | null>(null);
   const [ratesLoading, setRatesLoading] = useState(true);
+  const [ratesUpdatedAt, setRatesUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    getExchangeRates().then(async (data) => {
-      if (data) {
-        setRates(data.rates);
+    async function loadRates() {
+      const fresh = await refreshExchangeRates();
+      if (fresh) {
+        setRates(fresh.rates);
+        setRatesUpdatedAt(fresh.updatedAt);
       } else {
-        const fresh = await refreshExchangeRates();
-        if (fresh) setRates(fresh.rates);
+        const cached = await getExchangeRates();
+        if (cached) {
+          setRates(cached.rates);
+          setRatesUpdatedAt(cached.updatedAt);
+        }
       }
       setRatesLoading(false);
-    });
+    }
+    loadRates();
   }, []);
 
   const handleRefresh = useCallback(async () => {
     setRatesLoading(true);
     const fresh = await refreshExchangeRates();
-    if (fresh) setRates(fresh.rates);
+    if (fresh) {
+      setRates(fresh.rates);
+      setRatesUpdatedAt(fresh.updatedAt);
+    }
     setRatesLoading(false);
   }, []);
 
@@ -212,6 +222,11 @@ export default function CurrencyPage() {
                   ? "Rates are sourced from exchangerate.host (free tier)."
                   : "Could not load live rates. Using demonstration rates."}
               </p>
+              {ratesUpdatedAt && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Last updated: {new Date(ratesUpdatedAt).toLocaleString()}
+                </p>
+              )}
               <Button
                 variant="outline"
                 size="sm"
