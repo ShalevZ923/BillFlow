@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { logoutAction } from "@/app/(app)/actions";
 import { NotificationCenter } from "@/components/layout/notification-center";
+import { Badge } from "@/components/ui/badge";
 
 type NotificationCounts = Partial<Record<string, number>>;
 
@@ -146,7 +147,14 @@ export function AppSidebar({
               onClick={onMobileClose}
             >
               <Icon size={18} className="shrink-0" />
-              {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+              {!collapsed && (
+                <span className="flex-1 truncate">{item.label}</span>
+              )}
+              {!collapsed && item.key === "intake" && (
+                <Badge variant="warning" className="shrink-0 text-[10px] px-1.5 py-0 h-4">
+                  Pro
+                </Badge>
+              )}
               {!collapsed && count != null && count > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
                   {count}
