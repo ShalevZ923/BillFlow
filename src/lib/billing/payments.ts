@@ -21,6 +21,13 @@ export const paymentRecordSchema = z
     paidAmount: undefined
   }));
 
-export function applyPaymentToOccurrence<T extends { id: string; status: (typeof occurrenceStatuses)[number] }>(occurrence: T): T {
-  return { ...occurrence, status: "paid" };
+export function applyPaymentToOccurrence<T extends { id: string; status: (typeof occurrenceStatuses)[number] }>(
+  occurrence: T,
+  paidAmountCents: number,
+  occurrenceAmountCents: number
+): T {
+  if (paidAmountCents >= occurrenceAmountCents) {
+    return { ...occurrence, status: "paid" };
+  }
+  return occurrence;
 }

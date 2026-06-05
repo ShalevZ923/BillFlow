@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords } from "@/db/schema";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and, gt } from "drizzle-orm";
 import { logAuditEvent } from "@/lib/audit/log";
+import { syncOverdueOccurrences, generateOccurrences } from "@/lib/billing/recurrence";
+import { extendOccurrencesIfNeeded } from "@/lib/billing/recurrence";
 
 export type BillDetail = {
   id: string;
@@ -55,6 +57,9 @@ export async function getBill(id: string): Promise<BillDetailData | null> {
   if (!user) return null;
 
   const db = createDb();
+
+  await syncOverdueOccurrences(db, user.id);
+  await extendOccurrencesIfNeeded(db, id, user.id);
 
   const [bill] = await db
     .select()
@@ -222,6 +227,39 @@ export async function updateBill(
     targetId: id,
     changes: { before, after }
   });
+
+  const amountChanged = amountCents !== existing.amountCents;
+  const cycleChanged = data.cycle !== existing.cycle;
+  const dueDateChanged = data.dueDate !== existing.firstDueDate;
+
+  if (amountChanged || cycleChanged || dueDateChanged) {
+    const today = new Date().toISOString().slice(0, 10);
+
+    await db
+      .delete(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.billId, id),
+          eq(billOccurrences.status, "unpaid"),
+          gt(billOccurrences.dueDate, today)
+        )
+      );
+
+    const newOccurrences = generateOccurrences({
+      billId: id,
+      userId: user.id,
+      startDate: data.dueDate,
+      cycle: data.cycle as typeof existing.cycle,
+      customCycleDays: data.cycle === "custom" ? parseInt(data.customCycleDays || "0") || null : null,
+      amountCents,
+      currency: data.currency,
+      monthsAhead: 12
+    });
+
+    if (newOccurrences.length > 0) {
+      await db.insert(billOccurrences).values(newOccurrences).onConflictDoNothing();
+    }
+  }
 
   revalidatePath(`/bills/${id}`);
   revalidatePath("/bills");

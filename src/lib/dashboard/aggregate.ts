@@ -108,10 +108,12 @@ export function buildDashboardPayload(input: {
       yearlyProjectionCents += converted;
     }
 
-    const category = bill?.category ?? "Other";
-    categoryTotalsMap.set(category, (categoryTotalsMap.get(category) ?? 0) + converted);
+    if (occurrence.status !== "skipped") {
+      const category = bill?.category ?? "Other";
+      categoryTotalsMap.set(category, (categoryTotalsMap.get(category) ?? 0) + converted);
 
-    monthlyBreakdownMap.set(monthKey, (monthlyBreakdownMap.get(monthKey) ?? 0) + converted);
+      monthlyBreakdownMap.set(monthKey, (monthlyBreakdownMap.get(monthKey) ?? 0) + converted);
+    }
 
     if (
       (occurrence.status === "unpaid" || occurrence.status === "overdue") &&

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences } from "@/db/schema";
 import { eq, inArray, desc, asc, sql } from "drizzle-orm";
+import { syncOverdueOccurrences } from "@/lib/billing/recurrence";
 
 export type BillData = {
   id: string;
@@ -25,6 +26,8 @@ export async function getBills(search?: string): Promise<BillData[]> {
   if (!user) return [];
 
   const db = createDb();
+
+  await syncOverdueOccurrences(db, user.id);
 
   const searchPattern = search?.trim() ? `%${search.trim()}%` : null;
 

@@ -1,5 +1,8 @@
 import { addDays, addMonths, addYears, format, isBefore, parseISO } from "date-fns";
+import { eq, and, lt, gt, sql } from "drizzle-orm";
 import type { BillingCycle, OccurrenceStatus } from "./types";
+import type { createDb } from "@/db/client";
+import { billOccurrences } from "@/db/schema";
 
 export type GeneratedOccurrence = {
   billId: string;
@@ -50,4 +53,83 @@ export function markOverdue<T extends { dueDate: string; status: OccurrenceStatu
 
     return occurrence;
   });
+}
+
+export async function syncOverdueOccurrences(db: ReturnType<typeof createDb>, userId: string) {
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  await db
+    .update(billOccurrences)
+    .set({ status: "overdue", updatedAt: new Date() })
+    .where(
+      and(
+        eq(billOccurrences.userId, userId),
+        eq(billOccurrences.status, "unpaid"),
+        lt(billOccurrences.dueDate, todayStr)
+      )
+    );
+}
+
+export async function extendOccurrencesIfNeeded(db: ReturnType<typeof createDb>, billId: string, userId: string) {
+  const { bills } = await import("@/db/schema");
+
+  const [bill] = await db
+    .select({ cycle: bills.cycle, customCycleDays: bills.customCycleDays, amountCents: bills.amountCents, currency: bills.currency })
+    .from(bills)
+    .where(and(eq(bills.id, billId), eq(bills.userId, userId)))
+    .limit(1);
+
+  if (!bill || bill.cycle === "one-time") return;
+
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  const futureOccurrences = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(billOccurrences)
+    .where(
+      and(
+        eq(billOccurrences.billId, billId),
+        eq(billOccurrences.status, "unpaid"),
+        gt(billOccurrences.dueDate, todayStr)
+      )
+    );
+
+  const remaining = futureOccurrences[0]?.count ?? 0;
+
+  if (remaining > 2) return;
+
+  const latestOccurrence = await db
+    .select({ dueDate: billOccurrences.dueDate })
+    .from(billOccurrences)
+    .where(eq(billOccurrences.billId, billId))
+    .orderBy(sql`${billOccurrences.dueDate} DESC`)
+    .limit(1);
+
+  const startDate = latestOccurrence[0]?.dueDate ?? todayStr;
+
+  const newOccurrences = generateOccurrences({
+    billId,
+    userId,
+    startDate,
+    cycle: bill.cycle,
+    customCycleDays: bill.customCycleDays,
+    amountCents: bill.amountCents,
+    currency: bill.currency,
+    monthsAhead: 12
+  });
+
+  const futureDateStr = newOccurrences
+    .filter((o) => o.dueDate > startDate)
+    .map((o) => ({
+      billId: o.billId,
+      userId: o.userId,
+      dueDate: o.dueDate,
+      amountCents: o.amountCents,
+      currency: o.currency,
+      status: o.status
+    }));
+
+  if (futureDateStr.length > 0) {
+    await db.insert(billOccurrences).values(futureDateStr).onConflictDoNothing();
+  }
 }

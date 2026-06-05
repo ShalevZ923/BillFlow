@@ -16,13 +16,13 @@ describe("payment record logic", () => {
     expect(payment.paidCurrency).toBe("USD");
   });
 
-  it("marks an occurrence paid without deleting history", () => {
-    expect(applyPaymentToOccurrence({ id: "occ-1", status: "overdue" })).toEqual({
+  it("marks an occurrence paid when full amount is met", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "overdue" }, 5000, 5000)).toEqual({
       id: "occ-1",
       status: "paid"
     });
 
-    expect(applyPaymentToOccurrence({ id: "occ-2", status: "unpaid" })).toEqual({
+    expect(applyPaymentToOccurrence({ id: "occ-2", status: "unpaid" }, 10000, 10000)).toEqual({
       id: "occ-2",
       status: "paid"
     });

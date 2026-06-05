@@ -15,31 +15,38 @@ describe("payment records", () => {
     expect(payment.paidAmountCents).toBe(9999);
   });
 
-  it("marks an occurrence paid without deleting history", () => {
-    expect(applyPaymentToOccurrence({ id: "occ-1", status: "overdue" })).toEqual({
+  it("marks an occurrence as paid when paid amount meets or exceeds the occurrence amount", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "overdue" }, 10000, 10000)).toEqual({
       id: "occ-1",
       status: "paid"
     });
   });
 
-  it("marks an unpaid occurrence as paid", () => {
-    expect(applyPaymentToOccurrence({ id: "occ-1", status: "unpaid" })).toEqual({
+  it("marks an unpaid occurrence as paid when full amount is paid", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "unpaid" }, 10000, 10000)).toEqual({
       id: "occ-1",
       status: "paid"
     });
   });
 
-  it("marks an already-paid occurrence as paid again", () => {
-    expect(applyPaymentToOccurrence({ id: "occ-1", status: "paid" })).toEqual({
+  it("marks an occurrence as paid when overpaying", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "unpaid" }, 15000, 10000)).toEqual({
       id: "occ-1",
       status: "paid"
     });
   });
 
-  it("marks a skipped occurrence as paid", () => {
-    expect(applyPaymentToOccurrence({ id: "occ-1", status: "skipped" })).toEqual({
+  it("does NOT mark as paid when partial payment is made", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "unpaid" }, 5000, 10000)).toEqual({
       id: "occ-1",
-      status: "paid"
+      status: "unpaid"
+    });
+  });
+
+  it("does NOT mark as paid when payment is zero", () => {
+    expect(applyPaymentToOccurrence({ id: "occ-1", status: "unpaid" }, 0, 10000)).toEqual({
+      id: "occ-1",
+      status: "unpaid"
     });
   });
 

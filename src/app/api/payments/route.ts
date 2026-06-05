@@ -60,11 +60,17 @@ export async function POST(request: Request) {
       .where(eq(billOccurrences.id, parsed.data.occurrenceId));
 
     if (occurrence) {
-      const updated = applyPaymentToOccurrence(occurrence);
-      await db
-        .update(billOccurrences)
-        .set({ status: updated.status, updatedAt: new Date() })
-        .where(eq(billOccurrences.id, occurrence.id));
+      const updated = applyPaymentToOccurrence(
+        occurrence,
+        parsed.data.paidAmountCents,
+        occurrence.amountCents
+      );
+      if (updated.status !== occurrence.status) {
+        await db
+          .update(billOccurrences)
+          .set({ status: updated.status, updatedAt: new Date() })
+          .where(eq(billOccurrences.id, occurrence.id));
+      }
     }
 
     await logAuditEvent({
@@ -75,7 +81,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { paymentId: inserted.id, occurrenceStatus: "paid" },
+      {
+        paymentId: inserted.id,
+        occurrenceStatus: occurrence?.status ?? "unpaid",
+        paidInFull: (occurrence?.amountCents ?? 0) <= parsed.data.paidAmountCents
+      },
       { status: 201 }
     );
   } catch (error) {

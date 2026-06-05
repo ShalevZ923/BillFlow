@@ -6,6 +6,7 @@ import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords, exchangeRateSnapshots, profiles } from "@/db/schema";
 import type { CurrencyCode } from "@/lib/billing/types";
 import type { ExchangeRates } from "@/lib/currency/conversion";
+import { syncOverdueOccurrences } from "@/lib/billing/recurrence";
 
 export type DashboardBillData = {
   id: string;
@@ -61,6 +62,8 @@ export async function getDashboardData(search?: string): Promise<DashboardData> 
   }
 
   const db = createDb();
+
+  await syncOverdueOccurrences(db, user.id);
 
   const searchPattern = search?.trim() ? `%${search.trim()}%` : null;
 
