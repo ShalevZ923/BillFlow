@@ -1,14 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { getProfile } from "@/app/(app)/settings/actions";
 
 export default function BillingSettingsPage() {
-  const [plan] = useState<"free" | "pro">("free");
+  const [plan, setPlan] = useState<"free" | "pro" | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProfile().then((profile) => {
+      setPlan((profile?.plan as "free" | "pro") ?? "free");
+      setLoading(false);
+    }).catch(() => {
+      setPlan("free");
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div>
+        <div>
+          <Skeleton className="h-7 w-24 mb-1" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="mt-6 space-y-6">
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
