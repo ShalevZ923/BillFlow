@@ -3,7 +3,7 @@
 import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences } from "@/db/schema";
-import { eq, inArray, desc, asc } from "drizzle-orm";
+import { eq, inArray, desc, asc, or, ilike } from "drizzle-orm";
 
 export type BillData = {
   id: string;
@@ -20,7 +20,7 @@ export type BillData = {
   notes: string;
 };
 
-export async function getBills(): Promise<BillData[]> {
+export async function getBills(search?: string): Promise<BillData[]> {
   const user = await getCurrentUser();
   if (!user) return [];
 
