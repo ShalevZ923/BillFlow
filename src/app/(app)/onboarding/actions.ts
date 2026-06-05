@@ -100,15 +100,25 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
   const db = createDb();
 
   await db
-    .update(profiles)
-    .set({
+    .insert(profiles)
+    .values({
+      id: user.id,
+      email: user.email ?? "",
       name: data.name,
       defaultCurrency: data.defaultCurrency,
       emailRemindersEnabled: data.emailRemindersEnabled,
-      onboardingCompletedAt: new Date(),
-      updatedAt: new Date()
+      onboardingCompletedAt: new Date()
     })
-    .where(eq(profiles.id, user.id));
+    .onConflictDoUpdate({
+      target: profiles.id,
+      set: {
+        name: data.name,
+        defaultCurrency: data.defaultCurrency,
+        emailRemindersEnabled: data.emailRemindersEnabled,
+        onboardingCompletedAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
 
   if (data.seedSampleData) {
     for (const bill of seedBills) {

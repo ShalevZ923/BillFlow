@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { ArrowRight, Lightbulb } from "lucide-react";
+import { ArrowRight, ArrowLeft, Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { CurrencyCode } from "@/lib/billing/types";
@@ -51,6 +51,36 @@ export default function OnboardingPage() {
     }
   ];
 
+  const handleBack = useCallback(() => {
+    if (step > 0) {
+      setStep(step - 1);
+      setError(null);
+    }
+  }, [step]);
+
+  const handleSkip = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await completeOnboarding({
+        name: name || "User",
+        defaultCurrency: currency as CurrencyCode,
+        tags,
+        emailRemindersEnabled: remindersEnabled,
+        seedSampleData: false
+      });
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError("Failed to save onboarding data");
+    } finally {
+      setSaving(false);
+    }
+  }, [name, currency, tags, remindersEnabled, router]);
+
   const handleNext = useCallback(async () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
@@ -59,7 +89,7 @@ export default function OnboardingPage() {
       setError(null);
       try {
         const result = await completeOnboarding({
-          name,
+          name: name || "User",
           defaultCurrency: currency as CurrencyCode,
           tags,
           emailRemindersEnabled: remindersEnabled,
@@ -178,9 +208,26 @@ export default function OnboardingPage() {
           )}
         </CardContent>
 
-        <CardFooter className="justify-end">
+        <CardFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={step === 0 || saving}
+            >
+              <ArrowLeft size={16} />
+              Back
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              disabled={saving}
+            >
+              Skip
+            </Button>
+          </div>
           <Button onClick={handleNext} disabled={saving}>
-            {saving ? "Saving..." : step < steps.length - 1 ? "Next" : "Go to Dashboard"}
+            {saving ? "Saving..." : step < steps.length - 1 ? "Next" : "Complete"}
             <ArrowRight size={16} />
           </Button>
         </CardFooter>
