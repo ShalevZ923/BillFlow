@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRightLeft, TrendingUp, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRightLeft, TrendingUp, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { mockExchangeRates } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
+import { getExchangeRates } from "./actions";
 
 function getSymbol(code: string): string {
   return currencyOptions.find((c) => c.code === code)?.symbol ?? code;
@@ -26,12 +27,25 @@ export default function CurrencyPage() {
   const [amount, setAmount] = useState("100");
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("EUR");
+  const [rates, setRates] = useState<Record<string, number> | null>(null);
+  const [ratesLoading, setRatesLoading] = useState(true);
+
+  useEffect(() => {
+    getExchangeRates().then((data) => {
+      if (data) {
+        setRates(data.rates);
+      }
+      setRatesLoading(false);
+    });
+  }, []);
+
+  const currentRates = rates ?? mockExchangeRates;
 
   const numAmount = parseFloat(amount) || 0;
   const toSymbol = getSymbol(toCurrency);
   const rate =
-    mockExchangeRates[toCurrency] && mockExchangeRates[fromCurrency]
-      ? mockExchangeRates[toCurrency] / mockExchangeRates[fromCurrency]
+    currentRates[toCurrency] && currentRates[fromCurrency]
+      ? currentRates[toCurrency] / currentRates[fromCurrency]
       : 1;
   const converted = numAmount * rate;
 
@@ -61,8 +75,8 @@ export default function CurrencyPage() {
               <div className="flex items-center gap-2">
                 <CardTitle>Quick Convert</CardTitle>
                 <Badge variant="secondary" className="gap-1 text-[10px]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                  Demo Rates
+                  <span className={`h-1.5 w-1.5 rounded-full ${rates ? "bg-green-400" : "bg-amber-400"}`} />
+                  {ratesLoading ? "Loading..." : rates ? "Live Rates" : "Demo Rates"}
                 </Badge>
               </div>
             </CardHeader>
@@ -128,8 +142,8 @@ export default function CurrencyPage() {
               <div className="flex gap-2">
                 {quickConversions.map((qc) => {
                   const qr =
-                    mockExchangeRates[qc.to] && mockExchangeRates[qc.from]
-                      ? (mockExchangeRates[qc.to] / mockExchangeRates[qc.from]).toFixed(4)
+                    currentRates[qc.to] && currentRates[qc.from]
+                      ? (currentRates[qc.to] / currentRates[qc.from]).toFixed(4)
                       : "—";
                   return (
                     <button

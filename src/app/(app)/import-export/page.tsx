@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Download, Upload as UploadIcon, FileText, Check, AlertTriangle, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { mockBills } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
+import { getBillCount } from "./actions";
 import type { BillInput } from "@/lib/billing/types";
 
 type PreviewRow = {
@@ -47,6 +47,11 @@ export default function ImportExportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [billCount, setBillCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getBillCount().then(setBillCount);
+  }, []);
 
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -184,7 +189,7 @@ export default function ImportExportPage() {
                 <div>
                   <p className="text-sm font-medium">bills-export.csv</p>
                   <p className="text-xs text-muted-foreground">
-                    {mockBills.length} bills
+                    {billCount != null ? `${billCount} bills` : "Loading..."}
                   </p>
                 </div>
               </div>
