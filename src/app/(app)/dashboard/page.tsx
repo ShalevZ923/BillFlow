@@ -92,7 +92,10 @@ function deriveBillListItems(
       category: bill.category,
       priority: bill.priority as BillPriority,
       status: (primary?.status ?? "unpaid") as OccurrenceStatus,
-      tags: bill.tags
+      tags: bill.tags,
+      vendor: bill.vendor ?? "",
+      cycle: bill.cycle ?? "monthly",
+      notes: bill.notes ?? ""
     };
   });
 }
@@ -479,6 +482,7 @@ export default function DashboardPage() {
             bills={periodFiltered}
             searchQuery={filters.search}
             emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
+            onChange={fetchData}
           />
         </div>
       </div>

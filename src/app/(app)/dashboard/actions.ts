@@ -15,6 +15,7 @@ export type DashboardBillData = {
   priority: string;
   tags: string[];
   cycle: string;
+  notes: string;
 };
 
 export type DashboardOccurrenceData = {
@@ -103,7 +104,8 @@ export async function getDashboardData(search?: string): Promise<DashboardData> 
       category: b.category,
       priority: b.priority,
       tags: b.tags,
-      cycle: b.cycle
+      cycle: b.cycle,
+      notes: b.notes
     })),
     occurrences: userOccurrences.map((o) => ({
       id: o.id,

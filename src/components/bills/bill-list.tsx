@@ -14,15 +14,19 @@ export type BillListItem = {
   priority: BillPriority;
   status: OccurrenceStatus;
   tags: string[];
+  vendor?: string;
+  cycle?: string;
+  notes?: string;
 };
 
 type BillListProps = {
   bills: BillListItem[];
   emptyStateText: string;
   searchQuery?: string;
+  onChange?: () => void;
 };
 
-export function BillList({ bills, emptyStateText, searchQuery }: BillListProps) {
+export function BillList({ bills, emptyStateText, searchQuery, onChange }: BillListProps) {
   const filtered = useMemo(() => {
     if (!searchQuery) return bills;
     const q = searchQuery.toLowerCase();
@@ -37,7 +41,7 @@ export function BillList({ bills, emptyStateText, searchQuery }: BillListProps) 
   if (bills.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-white p-12 text-center">
-          <p className="text-muted-foreground">{emptyStateText}</p>
+        <p className="text-muted-foreground">{emptyStateText}</p>
       </div>
     );
   }
@@ -53,7 +57,22 @@ export function BillList({ bills, emptyStateText, searchQuery }: BillListProps) 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {filtered.map((bill) => (
-        <BillCard key={bill.id} id={bill.id} name={bill.name} amountCents={bill.amountCents} currency={bill.currency} dueDate={bill.dueDate} category={bill.category} priority={bill.priority} status={bill.status} tags={bill.tags} />
+        <BillCard
+          key={bill.id}
+          id={bill.id}
+          name={bill.name}
+          amountCents={bill.amountCents}
+          currency={bill.currency}
+          dueDate={bill.dueDate}
+          category={bill.category}
+          priority={bill.priority}
+          status={bill.status}
+          tags={bill.tags}
+          vendor={bill.vendor}
+          cycle={bill.cycle}
+          notes={bill.notes}
+          onChange={onChange}
+        />
       ))}
     </div>
   );

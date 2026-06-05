@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Search, Calendar, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
+import { BillCardMenu } from "@/components/bills/bill-card-menu";
+import { EditBillDialog } from "@/components/bills/edit-bill-dialog";
 import { getBills, type BillData } from "./actions";
 import type { CurrencyCode } from "@/lib/billing/types";
 import { currencyOptions } from "@/lib/currency/supported";
@@ -45,6 +47,8 @@ export default function BillsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [priorityFilter, setPriorityFilter] = useState<string>("All");
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
+  const [dialogMode, setDialogMode] = useState<"edit" | "delete">("edit");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchBills = useCallback(async (searchQuery?: string) => {
@@ -100,6 +104,24 @@ export default function BillsPage() {
     };
     setBills((prev) => [newBill, ...prev]);
   }, []);
+
+  const handleBillsChanged = useCallback(() => {
+    fetchBills(search || undefined);
+  }, [fetchBills, search]);
+
+  const handleEdit = useCallback((billId: string) => {
+    setDialogMode("edit");
+    setEditingBillId(billId);
+  }, []);
+
+  const handleDelete = useCallback((billId: string) => {
+    setDialogMode("delete");
+    setEditingBillId(billId);
+  }, []);
+
+  const selectedBill = editingBillId
+    ? bills.find((b) => b.id === editingBillId) ?? null
+    : null;
 
   const categories = useMemo(
     () => ["All", ...new Set(bills.map((b) => b.category))],
@@ -225,68 +247,86 @@ export default function BillsPage() {
           </div>
         ) : (
           filtered.map((bill) => (
-            <Link
+            <div
               key={bill.id}
-              href={`/bills/${bill.id}`}
-              className={`block rounded-xl border p-4 transition hover:shadow-sm hover:border-primary/30 dark:bg-card cursor-pointer ${
+              className={`relative group rounded-xl border p-4 transition hover:shadow-sm hover:border-primary/30 dark:bg-card ${
                 bill.status === "overdue"
                   ? "border-destructive/30 bg-destructive/[0.02] dark:bg-destructive/[0.03]"
                   : "border-border bg-white"
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold truncate">{bill.name}</h3>
-                    {bill.priority === "critical" && (
-                      <span className="shrink-0 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
-                        !
+              <Link href={`/bills/${bill.id}`} className="block">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold truncate">{bill.name}</h3>
+                      {bill.priority === "critical" && (
+                        <span className="shrink-0 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
+                          !
+                        </span>
+                      )}
+                    </div>
+                    {bill.vendor && (
+                      <p className="text-xs text-muted-foreground">{bill.vendor}</p>
+                    )}
+                  </div>
+                  <span className="text-sm font-bold whitespace-nowrap">
+                    {formatCurrency(bill.amountCents, bill.currency)}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusStyles[bill.status]}`}
+                  >
+                    {bill.status}
+                  </span>
+                  <span className={`text-[10px] font-medium capitalize ${priorityColors[bill.priority]}`}>
+                    {bill.priority}
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Calendar size={10} />
+                    {bill.dueDate}
+                  </span>
+                </div>
+                {bill.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {bill.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground dark:bg-muted/20"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {bill.tags.length > 3 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        +{bill.tags.length - 3}
                       </span>
                     )}
                   </div>
-                  {bill.vendor && (
-                    <p className="text-xs text-muted-foreground">{bill.vendor}</p>
-                  )}
-                </div>
-                <span className="text-sm font-bold whitespace-nowrap">
-                  {formatCurrency(bill.amountCents, bill.currency)}
-                </span>
+                )}
+              </Link>
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <BillCardMenu
+                  onEdit={() => handleEdit(bill.id)}
+                  onDelete={() => handleDelete(bill.id)}
+                />
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusStyles[bill.status]}`}
-                >
-                  {bill.status}
-                </span>
-                <span className={`text-[10px] font-medium capitalize ${priorityColors[bill.priority]}`}>
-                  {bill.priority}
-                </span>
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Calendar size={10} />
-                  {bill.dueDate}
-                </span>
-              </div>
-              {bill.tags.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {bill.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground dark:bg-muted/20"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {bill.tags.length > 3 && (
-                    <span className="text-[10px] text-muted-foreground">
-                      +{bill.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
-            </Link>
+            </div>
           ))
         )}
       </div>
+
+      {selectedBill && (
+        <EditBillDialog
+          bill={selectedBill}
+          open={!!editingBillId}
+          onOpenChange={(open) => { if (!open) setEditingBillId(null); }}
+          onSaved={handleBillsChanged}
+          onDeleted={handleBillsChanged}
+          initialMode={dialogMode}
+        />
+      )}
     </div>
   );
 }
