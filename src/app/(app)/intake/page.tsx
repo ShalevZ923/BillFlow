@@ -9,6 +9,7 @@ import { WorkInProgressBanner } from "@/components/ui/work-in-progress-banner";
 import { useComingSoon } from "@/hooks/use-coming-soon";
 import { mockIntakeSources, mockDetectedBills } from "@/lib/mock/data";
 import { currencyOptions } from "@/lib/currency/supported";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getUserPlan } from "./actions";
 import Link from "next/link";
 
@@ -61,7 +62,25 @@ export default function IntakePage() {
     );
   }
 
-  if (plan === null) return null;
+  if (plan === null) {
+    return (
+      <div>
+        <div className="mb-6">
+          <Skeleton className="h-7 w-40 mb-1" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-10 w-64 mb-6 rounded-lg" />
+        <Skeleton className="h-6 w-36 mb-4" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+        </div>
+        <Skeleton className="h-6 w-36 mb-4" />
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div>
