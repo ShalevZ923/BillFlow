@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { getEnv } from "@/lib/env";
+import { rateLimit } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
@@ -33,6 +34,12 @@ export async function loginAction(
       }
     }
     return { fieldErrors };
+  }
+
+  const emailKey = `login:${parsed.data.email.toLowerCase().trim()}`;
+  const rl = rateLimit(emailKey, 8, 60_000);
+  if (!rl.allowed) {
+    return { error: "Too many attempts. Please try again later." };
   }
 
   try {

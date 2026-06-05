@@ -46,11 +46,13 @@ export async function POST(request: Request) {
     const userId = user.id;
     const plan: Plan = profile?.plan ?? "free";
 
-    const currentBillCount = await db
-      .$count(bills, sql`${bills.userId} = ${userId}`);
-    const limit = canCreateBill({ plan, currentBillCount });
-    if (!limit.allowed) {
-      return NextResponse.json({ error: limit.reason }, { status: 402 });
+    if (plan !== "pro") {
+      const currentBillCount = await db
+        .$count(bills, sql`${bills.userId} = ${userId}`);
+      const limit = canCreateBill({ plan, currentBillCount });
+      if (!limit.allowed) {
+        return NextResponse.json({ error: limit.reason }, { status: 402 });
+      }
     }
 
     const [inserted] = await db
@@ -99,8 +101,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ billId: inserted.id, occurrenceCount: occurrences.length }, { status: 201 });
   } catch (error) {
+    console.error("Bill creation failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

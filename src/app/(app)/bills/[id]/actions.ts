@@ -235,16 +235,6 @@ export async function updateBill(
   if (amountChanged || cycleChanged || dueDateChanged) {
     const today = new Date().toISOString().slice(0, 10);
 
-    await db
-      .delete(billOccurrences)
-      .where(
-        and(
-          eq(billOccurrences.billId, id),
-          eq(billOccurrences.status, "unpaid"),
-          gt(billOccurrences.dueDate, today)
-        )
-      );
-
     const newOccurrences = generateOccurrences({
       billId: id,
       userId: user.id,
@@ -256,9 +246,21 @@ export async function updateBill(
       monthsAhead: 12
     });
 
-    if (newOccurrences.length > 0) {
-      await db.insert(billOccurrences).values(newOccurrences).onConflictDoNothing();
-    }
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(billOccurrences)
+        .where(
+          and(
+            eq(billOccurrences.billId, id),
+            eq(billOccurrences.status, "unpaid"),
+            gt(billOccurrences.dueDate, today)
+          )
+        );
+
+      if (newOccurrences.length > 0) {
+        await tx.insert(billOccurrences).values(newOccurrences).onConflictDoNothing();
+      }
+    });
   }
 
   revalidatePath(`/bills/${id}`);

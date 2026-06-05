@@ -135,8 +135,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ emailSent, pushSent, failed });
   } catch (error) {
+    console.error("Reminders cron failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

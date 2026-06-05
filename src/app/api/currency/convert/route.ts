@@ -5,6 +5,7 @@ import { convertToMany } from "@/lib/currency/conversion";
 import { createDb } from "@/db/client";
 import { exchangeRateSnapshots, profiles } from "@/db/schema";
 import { createSupabaseServerClient } from "@/lib/auth/server";
+import { rateLimitRequest } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 
 const convertSchema = z.object({
@@ -14,6 +15,14 @@ const convertSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -77,8 +86,9 @@ export async function POST(request: Request) {
       ratesUpdatedAt: rates.updatedAt
     });
   } catch (error) {
+    console.error("Currency conversion failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

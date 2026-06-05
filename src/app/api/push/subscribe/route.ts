@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createDb } from "@/db/client";
 import { pushSubscriptions } from "@/db/schema";
+import { createSupabaseServerClient } from "@/lib/auth/server";
+import { rateLimitRequest } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const subscribeSchema = z.object({
@@ -12,8 +14,22 @@ const subscribeSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
-    const userId = request.headers.get("x-mock-user-id") ?? "00000000-0000-0000-0000-000000000001";
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = user.id;
 
     const body = await request.json();
     const parsed = subscribeSchema.safeParse(body);

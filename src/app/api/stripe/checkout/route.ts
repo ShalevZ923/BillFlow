@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { getEnv } from "@/lib/env";
 import { getStripe } from "@/lib/stripe/client";
+import { createSupabaseServerClient } from "@/lib/auth/server";
+import { rateLimitRequest } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 5);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const env = getEnv();
 
@@ -13,7 +23,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = request.headers.get("x-mock-user-id") ?? "00000000-0000-0000-0000-000000000001";
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = user.id;
 
     const stripe = getStripe();
 

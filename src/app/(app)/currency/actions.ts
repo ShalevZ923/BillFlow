@@ -4,6 +4,7 @@ import { createDb } from "@/db/client";
 import { exchangeRateSnapshots } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getEnv } from "@/lib/env";
+import { getCurrentUser } from "@/lib/auth/server";
 import type { CurrencyCode } from "@/lib/billing/types";
 
 export type ExchangeRateData = {
@@ -33,6 +34,9 @@ export async function getExchangeRates(): Promise<ExchangeRateData | null> {
 }
 
 export async function refreshExchangeRates(): Promise<ExchangeRateData | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
   try {
     const env = getEnv();
     const response = await fetch(env.EXCHANGE_RATE_API_URL);

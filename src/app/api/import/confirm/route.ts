@@ -17,6 +17,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const contentLength = parseInt(request.headers.get("content-length") ?? "0", 10);
+  if (contentLength > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: "Request too large. Maximum 5MB allowed." }, { status: 413 });
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -94,8 +99,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ imported });
   } catch (error) {
+    console.error("CSV import failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

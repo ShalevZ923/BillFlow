@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { getEnv } from "@/lib/env";
+import { rateLimit } from "@/lib/rate-limit";
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format")
@@ -31,6 +32,12 @@ export async function forgotPasswordAction(
       }
     }
     return { fieldErrors };
+  }
+
+  const emailKey = `reset:${parsed.data.email.toLowerCase().trim()}`;
+  const rl = rateLimit(emailKey, 3, 300_000);
+  if (!rl.allowed) {
+    return { success: "If the email is registered, a reset link has been sent." };
   }
 
   try {

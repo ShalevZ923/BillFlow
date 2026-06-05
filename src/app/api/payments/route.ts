@@ -37,40 +37,51 @@ export async function POST(request: Request) {
     const userId = user.id;
     const db = createDb();
 
-    const [inserted] = await db
-      .insert(paymentRecords)
-      .values({
-        occurrenceId: parsed.data.occurrenceId,
-        userId,
-        paidAmountCents: parsed.data.paidAmountCents,
-        paidCurrency: parsed.data.paidCurrency,
-        paidDate: parsed.data.paidDate,
-        method: parsed.data.method,
-        note: parsed.data.note
-      })
-      .returning();
-
-    if (!inserted) {
-      return NextResponse.json({ error: "Failed to record payment" }, { status: 500 });
-    }
-
     const [occurrence] = await db
       .select()
       .from(billOccurrences)
       .where(eq(billOccurrences.id, parsed.data.occurrenceId));
 
-    if (occurrence) {
+    if (!occurrence || occurrence.userId !== userId) {
+      return NextResponse.json({ error: "Occurrence not found" }, { status: 404 });
+    }
+
+    const [inserted] = await db.transaction(async (tx) => {
+      const [payment] = await tx
+        .insert(paymentRecords)
+        .values({
+          occurrenceId: parsed.data.occurrenceId,
+          userId,
+          paidAmountCents: parsed.data.paidAmountCents,
+          paidCurrency: parsed.data.paidCurrency,
+          paidDate: parsed.data.paidDate,
+          method: parsed.data.method,
+          note: parsed.data.note
+        })
+        .returning();
+
+      if (!payment) {
+        tx.rollback();
+        return [];
+      }
+
       const updated = applyPaymentToOccurrence(
         occurrence,
         parsed.data.paidAmountCents,
         occurrence.amountCents
       );
       if (updated.status !== occurrence.status) {
-        await db
+        await tx
           .update(billOccurrences)
           .set({ status: updated.status, updatedAt: new Date() })
           .where(eq(billOccurrences.id, occurrence.id));
       }
+
+      return [payment];
+    });
+
+    if (!inserted) {
+      return NextResponse.json({ error: "Failed to record payment" }, { status: 500 });
     }
 
     await logAuditEvent({
@@ -83,14 +94,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         paymentId: inserted.id,
-        occurrenceStatus: occurrence?.status ?? "unpaid",
-        paidInFull: (occurrence?.amountCents ?? 0) <= parsed.data.paidAmountCents
+        occurrenceStatus: occurrence.status,
+        paidInFull: occurrence.amountCents <= parsed.data.paidAmountCents
       },
       { status: 201 }
     );
   } catch (error) {
+    console.error("Payment recording failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

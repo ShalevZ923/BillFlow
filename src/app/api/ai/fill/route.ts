@@ -5,12 +5,21 @@ import { createSupabaseServerClient } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { rateLimitRequest } from "@/lib/rate-limit";
 
 const fillSchema = z.object({
   text: z.string().min(1, "Text is required").max(5000)
 });
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +52,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ suggestion });
   } catch (error) {
+    console.error("AI fill failed:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "AI Fill failed. Try again." },
+      { error: "AI Fill failed. Try again." },
       { status: 500 }
     );
   }

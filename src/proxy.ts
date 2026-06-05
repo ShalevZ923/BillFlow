@@ -5,8 +5,7 @@ import type { CookieOptions } from "@supabase/ssr";
 
 const PUBLIC_PATHS = [
   "/login", "/signup", "/auth", "/forgot-password",
-  "/privacy", "/terms", "/features", "/pricing",
-  "/onboarding"
+  "/privacy", "/terms", "/features", "/pricing"
 ];
 
 const STATIC_PREFIXES = ["/api/", "/_next", "/favicon", "/icon", "/sw.js", "/manifest"];

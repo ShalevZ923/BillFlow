@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { getEnv } from "@/lib/env";
+import { rateLimit } from "@/lib/rate-limit";
 
 const signupSchema = z
   .object({
@@ -42,6 +43,12 @@ export async function signupAction(
     return { fieldErrors };
   }
 
+  const emailKey = `signup:${parsed.data.email.toLowerCase().trim()}`;
+  const rl = rateLimit(emailKey, 3, 300_000);
+  if (!rl.allowed) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signUp({
@@ -50,10 +57,7 @@ export async function signupAction(
     });
 
     if (error) {
-      if (error.message?.toLowerCase().includes("already registered")) {
-        return { error: "An account with this email already exists" };
-      }
-      return { error: "Could not create account" };
+      return { error: "Could not create account. Please try again later." };
     }
   } catch {
     return { error: "Connection error" };
