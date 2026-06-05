@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Upload, Globe, Calculator, Check, AlertTriangle } from "lucide-react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
@@ -159,6 +160,7 @@ const activityColors: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rawData, setRawData] = useState<{
@@ -166,7 +168,7 @@ export default function DashboardPage() {
     occurrences: DashboardOccurrenceData[];
     payments: DashboardPaymentData[];
     rates: ExchangeRates | null;
-    userProfile: { name: string; email: string; defaultCurrency: CurrencyCode };
+    userProfile: { name: string; email: string; defaultCurrency: CurrencyCode; onboardingCompleted: boolean };
   } | null>(null);
 
   const [searchLoading, setSearchLoading] = useState(false);
@@ -189,6 +191,10 @@ export default function DashboardPage() {
       const data = await getDashboardData(searchQuery);
       setRawData(data);
       setCurrency(data.userProfile.defaultCurrency);
+      if (!data.userProfile.onboardingCompleted) {
+        router.replace("/onboarding");
+        return;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {

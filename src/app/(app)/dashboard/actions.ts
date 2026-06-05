@@ -46,6 +46,7 @@ export type DashboardData = {
     name: string;
     email: string;
     defaultCurrency: CurrencyCode;
+    onboardingCompleted: boolean;
   };
 };
 
@@ -128,7 +129,8 @@ export async function getDashboardData(search?: string): Promise<DashboardData> 
     userProfile: {
       name: profile?.name ?? "User",
       email: user.email ?? "",
-      defaultCurrency: (profile?.defaultCurrency ?? "USD") as CurrencyCode
+      defaultCurrency: (profile?.defaultCurrency ?? "USD") as CurrencyCode,
+      onboardingCompleted: !!profile?.onboardingCompletedAt
     }
   };
 }
