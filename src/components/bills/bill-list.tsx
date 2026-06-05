@@ -53,7 +53,7 @@ export function BillList({ bills, emptyStateText, searchQuery }: BillListProps) 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {filtered.map((bill) => (
-        <BillCard key={bill.id} {...bill} />
+        <BillCard key={bill.id} id={bill.id} name={bill.name} amountCents={bill.amountCents} currency={bill.currency} dueDate={bill.dueDate} category={bill.category} priority={bill.priority} status={bill.status} tags={bill.tags} />
       ))}
     </div>
   );

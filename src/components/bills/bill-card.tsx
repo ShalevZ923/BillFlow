@@ -1,11 +1,13 @@
 import { clsx } from "clsx";
 import { Calendar, Tag } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 import { currencyOptions } from "@/lib/currency/supported";
 
 type BillCardProps = {
+  id: string;
   name: string;
   amountCents: number;
   currency: string;
@@ -38,10 +40,11 @@ function getCurrencySymbol(code: string): string {
   return currencyOptions.find((c) => c.code === code)?.symbol ?? code;
 }
 
-export function BillCard({ name, amountCents, currency, dueDate, category, priority, status, tags }: BillCardProps) {
+export function BillCard({ id, name, amountCents, currency, dueDate, category, priority, status, tags }: BillCardProps) {
   return (
-    <Card>
-      <CardContent>
+    <Link href={`/bills/${id}`}>
+      <Card className="transition hover:shadow-sm hover:border-primary/30 cursor-pointer">
+        <CardContent>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="font-semibold truncate">{name}</h3>
@@ -80,6 +83,7 @@ export function BillCard({ name, amountCents, currency, dueDate, category, prior
           </div>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </Link>
   );
 }

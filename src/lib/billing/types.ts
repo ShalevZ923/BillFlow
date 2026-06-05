@@ -10,6 +10,7 @@ export type OccurrenceStatus = (typeof occurrenceStatuses)[number];
 
 export type BillInput = {
   name: string;
+  vendor: string;
   amountCents: number;
   currency: CurrencyCode;
   dueDate: string;

@@ -295,6 +295,66 @@ export default function SettingsPage() {
             ))}
           </CardContent>
         </Card>
+
+        {/* Danger Zone */}
+        <Card className="border-destructive/40">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} className="text-destructive" />
+              <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Permanently delete your account and all associated data. This
+              action cannot be undone. All bills, occurrences, payments,
+              insights, and push subscriptions will be deleted.
+            </p>
+
+            {!showDeleteConfirm ? (
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={16} />
+                Delete Account
+              </Button>
+            ) : (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+                <p className="text-sm font-medium text-destructive mb-3">
+                  Type your email to confirm deletion:
+                </p>
+                <input
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                  placeholder={email}
+                  className="w-full rounded-lg border border-destructive/40 bg-background px-3 py-2 text-sm outline-none focus:border-destructive focus:ring-2 focus:ring-destructive/20 mb-3"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmationText !== email || deleting}
+                  >
+                    {deleting ? "Deleting..." : "Confirm Deletion"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteConfirmationText("");
+                    }}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {toast && (

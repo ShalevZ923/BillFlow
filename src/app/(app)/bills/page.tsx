@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, Calendar, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
 import { getBills, type BillData } from "./actions";
 import type { CurrencyCode } from "@/lib/billing/types";
@@ -189,12 +190,13 @@ export default function BillsPage() {
           </div>
         ) : (
           filtered.map((bill) => (
-            <div
+            <Link
               key={bill.id}
-              className={`rounded-xl border bg-white p-4 transition hover:shadow-sm dark:bg-card ${
+              href={`/bills/${bill.id}`}
+              className={`block rounded-xl border p-4 transition hover:shadow-sm hover:border-primary/30 dark:bg-card cursor-pointer ${
                 bill.status === "overdue"
                   ? "border-destructive/30 bg-destructive/[0.02] dark:bg-destructive/[0.03]"
-                  : "border-border"
+                  : "border-border bg-white"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -246,7 +248,7 @@ export default function BillsPage() {
                   )}
                 </div>
               )}
-            </div>
+            </Link>
           ))
         )}
       </div>

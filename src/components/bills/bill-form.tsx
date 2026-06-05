@@ -28,6 +28,8 @@ type BillFormValues = {
 type BillFormProps = {
   onSubmit: (data: BillFormValues) => void;
   isSubmitting?: boolean;
+  defaultValues?: Partial<BillFormValues>;
+  submitLabel?: string;
 };
 
 const formSchema = z.object({
@@ -45,7 +47,7 @@ const formSchema = z.object({
   notes: z.string().max(2000)
 });
 
-export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
+export function BillForm({ onSubmit, isSubmitting, defaultValues, submitLabel }: BillFormProps) {
   const {
     register,
     handleSubmit,
@@ -64,7 +66,8 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
       priority: "medium",
       status: "unpaid",
       tags: "",
-      notes: ""
+      notes: "",
+      ...defaultValues
     }
   });
 
@@ -240,7 +243,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
           <Plus size={16} />
-          {isSubmitting ? "Saving..." : "Add Bill"}
+          {isSubmitting ? "Saving..." : submitLabel ?? "Add Bill"}
         </Button>
       </div>
     </form>
