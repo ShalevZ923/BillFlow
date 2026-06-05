@@ -29,6 +29,7 @@ export const bills = pgTable("bills", {
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  vendor: text("vendor").notNull().default(""),
   amountCents: integer("amount_cents").notNull(),
   currency: text("currency").notNull(),
   firstDueDate: date("first_due_date").notNull(),
