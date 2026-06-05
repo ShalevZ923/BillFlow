@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       .values({
         userId,
         name: parsed.data.name,
+        vendor: parsed.data.vendor,
         amountCents: parsed.data.amountCents,
         currency: parsed.data.currency,
         firstDueDate: parsed.data.dueDate,

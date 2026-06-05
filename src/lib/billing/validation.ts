@@ -21,6 +21,7 @@ function parseTags(value: string): string[] {
 export const billInputSchema = z
   .object({
     name: z.string().trim().min(1, "Bill name is required").max(120),
+    vendor: z.string().trim().max(200).default(""),
     amount: z.string().transform((value, ctx) => {
       try {
         const cents = parseAmountToCents(value);

@@ -12,6 +12,7 @@ import type { BillingCycle, BillPriority } from "@/lib/billing/types";
 
 type BillFormValues = {
   name: string;
+  vendor: string;
   amount: string;
   currency: string;
   dueDate: string;
@@ -31,6 +32,7 @@ type BillFormProps = {
 
 const formSchema = z.object({
   name: z.string().min(1, "Bill name is required").max(120),
+  vendor: z.string().max(200),
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Enter a valid amount"),
   currency: z.string(),
   dueDate: z.string().min(1, "Due date is required"),
@@ -53,6 +55,7 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      vendor: "",
       amount: "",
       currency: "USD",
       dueDate: "",
@@ -80,6 +83,17 @@ export function BillForm({ onSubmit, isSubmitting }: BillFormProps) {
             {...register("name")}
           />
           {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="mb-1.5 block text-sm font-medium" htmlFor="vendor">
+            Vendor
+          </label>
+          <Input
+            id="vendor"
+            placeholder="e.g. Amazon Web Services"
+            {...register("vendor")}
+          />
         </div>
 
         <div>

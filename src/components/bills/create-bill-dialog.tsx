@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Sparkles } from "lucide-react";
 import type { BillListItem } from "@/components/bills/bill-list";
+import type { BillPriority } from "@/lib/billing/types";
 
 type CreateBillDialogProps = {
   onBillCreated: (bill: BillListItem) => void;
@@ -20,24 +21,41 @@ export function CreateBillDialog({ onBillCreated }: CreateBillDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(data: Record<string, unknown>) {
+  async function handleSubmit(data: Record<string, unknown>) {
     setIsSubmitting(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/bills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error ?? "Failed to create bill");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const amountCents = Math.round(parseFloat(String(data.amount)) * 100);
       const newBill: BillListItem = {
-        id: `bill-${Date.now()}`,
+        id: json.billId,
         name: String(data.name),
-        amountCents: Math.round(parseFloat(String(data.amount)) * 100),
+        amountCents,
         currency: String(data.currency),
         dueDate: String(data.dueDate),
         category: String(data.category),
-        priority: data.priority as BillListItem["priority"],
-        status: data.status as BillListItem["status"],
+        priority: data.priority as BillPriority,
+        status: (data.status as string) === "paid" ? "paid" : "unpaid",
         tags: String(data.tags)
           .split(",")
           .map((t: string) => t.trim())
-          .filter(Boolean),
+          .filter(Boolean)
       };
 
       onBillCreated(newBill);
@@ -47,12 +65,24 @@ export function CreateBillDialog({ onBillCreated }: CreateBillDialogProps) {
       setTimeout(() => {
         setOpen(false);
         setSuccess(false);
+        setError(null);
       }, 800);
-    }, 500);
+    } catch {
+      setError("Network error. Please try again.");
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleOpenChange(open: boolean) {
+    if (!open) {
+      setError(null);
+      setSuccess(false);
+    }
+    setOpen(open);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <Button onClick={() => setOpen(true)}>
         <Plus size={16} />
         New Bill
@@ -79,7 +109,7 @@ export function CreateBillDialog({ onBillCreated }: CreateBillDialogProps) {
               </DialogDescription>
             </div>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => handleOpenChange(false)}
               className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <svg
@@ -123,6 +153,11 @@ export function CreateBillDialog({ onBillCreated }: CreateBillDialogProps) {
             </div>
           ) : (
             <div className="px-6 py-5">
+              {error && (
+                <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
               <BillForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
             </div>
           )}

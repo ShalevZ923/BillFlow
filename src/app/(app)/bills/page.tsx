@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Calendar } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Search, Calendar, Loader2 } from "lucide-react";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
-import { mockBills } from "@/lib/mock/data";
-import type { OccurrenceStatus, CurrencyCode } from "@/lib/billing/types";
+import { getBills, type BillData } from "./actions";
+import type { CurrencyCode } from "@/lib/billing/types";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { BillListItem } from "@/components/bills/bill-list";
 
@@ -19,8 +19,6 @@ function getSymbol(code: string): string {
 function formatCurrency(c: number, code: CurrencyCode | string): string {
   return `${getSymbol(code)}${formatCents(c)}`;
 }
-
-type MockBill = (typeof mockBills)[number];
 
 const statusTabs = ["All", "Unpaid", "Overdue", "Paid"] as const;
 
@@ -39,15 +37,40 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function BillsPage() {
-  const [bills, setBills] = useState<MockBill[]>(mockBills);
+  const [bills, setBills] = useState<BillData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [priorityFilter, setPriorityFilter] = useState<string>("All");
 
+  useEffect(() => {
+    getBills()
+      .then(setBills)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleBillCreated = useCallback((billItem: BillListItem) => {
+    const newBill: BillData = {
+      id: billItem.id,
+      name: billItem.name,
+      vendor: "",
+      amountCents: billItem.amountCents,
+      currency: billItem.currency,
+      dueDate: billItem.dueDate,
+      cycle: "monthly",
+      category: billItem.category,
+      priority: billItem.priority,
+      status: billItem.status,
+      tags: billItem.tags,
+      notes: ""
+    };
+    setBills((prev) => [newBill, ...prev]);
+  }, []);
+
   const categories = useMemo(
-    () => ["All", ...new Set(mockBills.map((b) => b.category))],
-    []
+    () => ["All", ...new Set(bills.map((b) => b.category))],
+    [bills]
   );
 
   const filtered = useMemo(() => {
@@ -67,28 +90,35 @@ export default function BillsPage() {
     });
   }, [bills, search, statusFilter, categoryFilter, priorityFilter]);
 
-  function handleBillCreated(billItem: BillListItem) {
-    const newBill: MockBill = {
-      id: billItem.id,
-      name: billItem.name,
-      vendor: "",
-      amountCents: billItem.amountCents,
-      currency: billItem.currency as CurrencyCode,
-      dueDate: billItem.dueDate,
-      cycle: "monthly",
-      category: billItem.category,
-      priority: billItem.priority,
-      status: billItem.status === "overdue" ? "unpaid" : (billItem.status as OccurrenceStatus),
-      tags: billItem.tags,
-      notes: "",
-      source: null,
-      createdAt: new Date().toISOString()
-    };
-    setBills((prev) => [newBill, ...prev]);
-  }
-
   const overdueCount = bills.filter((b) => b.status === "overdue").length;
   const unpaidCount = bills.filter((b) => b.status === "unpaid").length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 size={32} className="animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (bills.length === 0) {
+    return (
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Bills</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              No bills yet
+            </p>
+          </div>
+          <CreateBillDialog onBillCreated={handleBillCreated} />
+        </div>
+        <div className="rounded-lg border border-border bg-white p-12 text-center dark:bg-card">
+          <p className="text-muted-foreground">No bills yet. Create your first bill to get started.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -105,7 +135,6 @@ export default function BillsPage() {
         <CreateBillDialog onBillCreated={handleBillCreated} />
       </div>
 
-      {/* Search + Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -153,7 +182,6 @@ export default function BillsPage() {
         </select>
       </div>
 
-      {/* Bill Cards Grid */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 ? (
           <div className="col-span-full flex h-48 items-center justify-center text-sm text-muted-foreground">
@@ -179,7 +207,9 @@ export default function BillsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{bill.vendor}</p>
+                  {bill.vendor && (
+                    <p className="text-xs text-muted-foreground">{bill.vendor}</p>
+                  )}
                 </div>
                 <span className="text-sm font-bold whitespace-nowrap">
                   {formatCurrency(bill.amountCents, bill.currency)}
@@ -198,11 +228,6 @@ export default function BillsPage() {
                   <Calendar size={10} />
                   {bill.dueDate}
                 </span>
-                {bill.source && (
-                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground dark:bg-muted/50">
-                    via {bill.source}
-                  </span>
-                )}
               </div>
               {bill.tags.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
