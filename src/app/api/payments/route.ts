@@ -4,6 +4,7 @@ import { applyPaymentToOccurrence } from "@/lib/billing/payments";
 import { createDb } from "@/db/client";
 import { paymentRecords, billOccurrences } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { logAuditEvent } from "@/lib/audit/log";
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +50,13 @@ export async function POST(request: Request) {
         .set({ status: updated.status, updatedAt: new Date() })
         .where(eq(billOccurrences.id, occurrence.id));
     }
+
+    await logAuditEvent({
+      userId,
+      action: "recorded_payment",
+      targetType: "payment",
+      targetId: inserted.id
+    });
 
     return NextResponse.json(
       { paymentId: inserted.id, occurrenceStatus: "paid" },

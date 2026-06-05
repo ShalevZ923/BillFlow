@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { profiles } from "@/db/schema";
+import { logAuditEvent } from "@/lib/audit/log";
 import type { CurrencyCode } from "@/lib/billing/types";
 
 export type ProfileData = {
@@ -83,6 +84,13 @@ export async function deleteAccount(): Promise<{ success: boolean; message: stri
   const db = createDb();
 
   await db.delete(profiles).where(eq(profiles.id, user.id));
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "deleted_account",
+    targetType: "profile",
+    targetId: user.id
+  });
 
   const { createSupabaseServerClient } = await import("@/lib/auth/server");
   const supabase = await createSupabaseServerClient();

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords } from "@/db/schema";
 import { eq, desc, inArray } from "drizzle-orm";
+import { logAuditEvent } from "@/lib/audit/log";
 
 export type BillDetail = {
   id: string;
@@ -166,6 +167,19 @@ export async function updateBill(
     return { success: false, error: "Amount must be greater than 0" };
   }
 
+  const before = {
+    name: existing.name,
+    vendor: existing.vendor,
+    amountCents: existing.amountCents,
+    currency: existing.currency,
+    firstDueDate: existing.firstDueDate,
+    cycle: existing.cycle,
+    category: existing.category,
+    priority: existing.priority,
+    tags: existing.tags,
+    notes: existing.notes
+  };
+
   await db
     .update(bills)
     .set({
@@ -187,6 +201,27 @@ export async function updateBill(
       updatedAt: new Date()
     })
     .where(eq(bills.id, id));
+
+  const after = {
+    name: data.name,
+    vendor: data.vendor,
+    amountCents,
+    currency: data.currency,
+    firstDueDate: data.dueDate,
+    cycle: data.cycle,
+    category: data.category,
+    priority: data.priority,
+    tags: data.tags.split(",").map((t) => t.trim()).filter(Boolean),
+    notes: data.notes
+  };
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "updated_bill",
+    targetType: "bill",
+    targetId: id,
+    changes: { before, after }
+  });
 
   revalidatePath(`/bills/${id}`);
   revalidatePath("/bills");
@@ -214,6 +249,13 @@ export async function deleteBill(
   }
 
   await db.delete(bills).where(eq(bills.id, id));
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "deleted_bill",
+    targetType: "bill",
+    targetId: id
+  });
 
   revalidatePath("/bills");
   revalidatePath("/dashboard");

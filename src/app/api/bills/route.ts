@@ -5,6 +5,7 @@ import { canCreateBill, type Plan } from "@/lib/plans/limits";
 import { generateOccurrences } from "@/lib/billing/recurrence";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences } from "@/db/schema";
+import { logAuditEvent } from "@/lib/audit/log";
 import type { BillingCycle } from "@/lib/billing/types";
 
 export async function POST(request: Request) {
@@ -68,6 +69,13 @@ export async function POST(request: Request) {
     if (occurrences.length > 0) {
       await db.insert(billOccurrences).values(occurrences).onConflictDoNothing();
     }
+
+    await logAuditEvent({
+      userId,
+      action: "created_bill",
+      targetType: "bill",
+      targetId: inserted.id
+    });
 
     return NextResponse.json({ billId: inserted.id, occurrenceCount: occurrences.length }, { status: 201 });
   } catch (error) {

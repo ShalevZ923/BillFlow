@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Plus, Upload, Globe, Calculator, Check, AlertTriangle } from "lucide-react";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
@@ -166,6 +166,9 @@ export default function DashboardPage() {
     userProfile: { name: string; email: string; defaultCurrency: CurrencyCode };
   } | null>(null);
 
+  const [searchLoading, setSearchLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [currency, setCurrency] = useState("USD");
   const [period, setPeriod] = useState("overview");
   const [filters, setFilters] = useState<FilterState>({
@@ -176,23 +179,46 @@ export default function DashboardPage() {
     priority: null
   });
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (searchQuery?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getDashboardData();
+      const data = await getDashboardData(searchQuery);
       setRawData(data);
       setCurrency(data.userProfile.defaultCurrency);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!filters.search.trim()) {
+      fetchData();
+      return;
+    }
+
+    setSearchLoading(true);
+    debounceRef.current = setTimeout(() => {
+      fetchData(filters.search);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [filters.search, fetchData]);
 
   const dashboardPayload = useMemo(() => {
     if (!rawData) return null;
@@ -321,7 +347,7 @@ export default function DashboardPage() {
           <p className="text-lg font-semibold text-destructive">Failed to load dashboard data</p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
         </div>
-        <Button variant="outline" onClick={fetchData}>
+        <Button variant="outline" onClick={() => fetchData()}>
           Retry
         </Button>
       </div>
@@ -446,6 +472,7 @@ export default function DashboardPage() {
           categories={categories}
           tags={tags}
           onFilterChange={setFilters}
+          searchLoading={searchLoading}
         />
         <div className="mt-4">
           <BillList

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Search, Calendar, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
@@ -41,15 +41,47 @@ export default function BillsPage() {
   const [bills, setBills] = useState<BillData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [priorityFilter, setPriorityFilter] = useState<string>("All");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchBills = useCallback(async (searchQuery?: string) => {
+    setLoading(true);
+    getBills(searchQuery)
+      .then(setBills)
+      .finally(() => {
+        setLoading(false);
+        setSearchLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
-    getBills()
-      .then(setBills)
-      .finally(() => setLoading(false));
-  }, []);
+    fetchBills();
+  }, [fetchBills]);
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!search.trim()) {
+      fetchBills();
+      return;
+    }
+
+    setSearchLoading(true);
+    debounceRef.current = setTimeout(() => {
+      fetchBills(search);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [search, fetchBills]);
 
   const handleBillCreated = useCallback((billItem: BillListItem) => {
     const newBill: BillData = {
@@ -143,8 +175,11 @@ export default function BillsPage() {
             placeholder="Search bills..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:bg-card"
+            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-9 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:bg-card"
           />
+          {searchLoading && (
+            <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+          )}
         </div>
         {statusTabs.map((tab) => (
           <button

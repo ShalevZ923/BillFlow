@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords, exchangeRateSnapshots, profiles } from "@/db/schema";
@@ -48,7 +48,7 @@ export type DashboardData = {
   };
 };
 
-export async function getDashboardData(): Promise<DashboardData> {
+export async function getDashboardData(search?: string): Promise<DashboardData> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user }
@@ -60,10 +60,20 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const db = createDb();
 
+  const searchPattern = search?.trim() ? `%${search.trim()}%` : null;
+
+  const billsWhere = searchPattern
+    ? sql`${bills.userId} = ${user.id} AND (${bills.name} ILIKE ${searchPattern} OR ${bills.vendor} ILIKE ${searchPattern} OR ${bills.notes} ILIKE ${searchPattern} OR ${bills.category} ILIKE ${searchPattern})`
+    : eq(bills.userId, user.id);
+
+  const occurrencesWhere = searchPattern
+    ? sql`${billOccurrences.userId} = ${user.id} AND EXISTS (SELECT 1 FROM ${bills} WHERE ${bills.id} = ${billOccurrences.billId} AND (${bills.name} ILIKE ${searchPattern} OR ${bills.vendor} ILIKE ${searchPattern} OR ${bills.notes} ILIKE ${searchPattern} OR ${bills.category} ILIKE ${searchPattern}))`
+    : eq(billOccurrences.userId, user.id);
+
   const [userBills, userOccurrences, userPayments, [rateSnapshot], [profile]] =
     await Promise.all([
-      db.select().from(bills).where(eq(bills.userId, user.id)),
-      db.select().from(billOccurrences).where(eq(billOccurrences.userId, user.id)),
+      db.select().from(bills).where(billsWhere),
+      db.select().from(billOccurrences).where(occurrencesWhere),
       db.select().from(paymentRecords).where(eq(paymentRecords.userId, user.id)),
       db
         .select()

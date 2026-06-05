@@ -3,7 +3,7 @@
 import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences } from "@/db/schema";
-import { eq, inArray, desc, asc, or, ilike } from "drizzle-orm";
+import { eq, inArray, desc, asc, sql } from "drizzle-orm";
 
 export type BillData = {
   id: string;
@@ -26,10 +26,16 @@ export async function getBills(search?: string): Promise<BillData[]> {
 
   const db = createDb();
 
+  const searchPattern = search?.trim() ? `%${search.trim()}%` : null;
+
   const userBills = await db
     .select()
     .from(bills)
-    .where(eq(bills.userId, user.id))
+    .where(
+      searchPattern
+        ? sql`${bills.userId} = ${user.id} AND (${bills.name} ILIKE ${searchPattern} OR ${bills.vendor} ILIKE ${searchPattern} OR ${bills.notes} ILIKE ${searchPattern} OR ${bills.category} ILIKE ${searchPattern})`
+        : eq(bills.userId, user.id)
+    )
     .orderBy(desc(bills.createdAt));
 
   const billIds = userBills.map((b) => b.id);

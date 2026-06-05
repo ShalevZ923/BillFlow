@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
@@ -26,6 +26,7 @@ type DashboardFiltersProps = {
   categories: string[];
   tags: string[];
   onFilterChange: (filters: DashboardFilterState) => void;
+  searchLoading?: boolean;
 };
 
 const statusOptions: Array<{ label: string; value: OccurrenceStatus }> = [
@@ -42,7 +43,7 @@ const priorityOptions: Array<{ label: string; value: BillPriority }> = [
   { label: "Low", value: "low" }
 ];
 
-export function DashboardFilters({ filters, categories, tags, onFilterChange }: DashboardFiltersProps) {
+export function DashboardFilters({ filters, categories, tags, onFilterChange, searchLoading }: DashboardFiltersProps) {
   const activeCount =
     (filters.search ? 1 : 0) +
     (filters.status ? 1 : 0) +
@@ -61,11 +62,14 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange }: 
       <div className="relative w-64">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          className="pl-9"
+          className="pl-9 pr-9"
           placeholder="Search bills..."
           value={filters.search}
           onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
         />
+        {searchLoading && (
+          <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+        )}
       </div>
 
       <Select
