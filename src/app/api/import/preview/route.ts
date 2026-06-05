@@ -3,9 +3,18 @@ import { parseBillCsv } from "@/lib/csv/import";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { profiles } from "@/db/schema";
+import { rateLimitRequest } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();

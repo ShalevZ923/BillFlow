@@ -6,8 +6,17 @@ import { paymentRecords, billOccurrences } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createSupabaseServerClient } from "@/lib/auth/server";
+import { rateLimitRequest } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const rl = rateLimitRequest(request, 20);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();

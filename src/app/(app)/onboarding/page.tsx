@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { CurrencyCode } from "@/lib/billing/types";
@@ -24,6 +24,7 @@ export default function OnboardingPage() {
   const [currency, setCurrency] = useState("USD");
   const [tags, setTags] = useState("");
   const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [seedSampleData, setSeedSampleData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +44,10 @@ export default function OnboardingPage() {
     {
       title: "Reminder preferences",
       description: "We'll send email reminders before bills are due."
+    },
+    {
+      title: "Want sample data to explore?",
+      description: "Start with a few realistic bills so you can try out the dashboard right away."
     }
   ];
 
@@ -57,7 +62,8 @@ export default function OnboardingPage() {
           name,
           defaultCurrency: currency as CurrencyCode,
           tags,
-          emailRemindersEnabled: remindersEnabled
+          emailRemindersEnabled: remindersEnabled,
+          seedSampleData
         });
         if (result.success) {
           router.push("/dashboard");
@@ -70,7 +76,7 @@ export default function OnboardingPage() {
         setSaving(false);
       }
     }
-  }, [step, steps.length, name, currency, tags, remindersEnabled, router]);
+  }, [step, steps.length, name, currency, tags, remindersEnabled, seedSampleData, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
@@ -125,7 +131,47 @@ export default function OnboardingPage() {
               />
               <span className="text-sm">Enable email reminders</span>
             </label>
-              )}
+          )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <div className="flex items-start gap-3">
+                  <Lightbulb size={18} className="text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">5 sample bills included</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Office rent, AWS, Google Workspace, business insurance, and internet —
+                      so you can see how BillFlow tracks recurring expenses, due dates, and
+                      categories.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSeedSampleData(true)}
+                  className={`flex-1 rounded-lg border p-3 text-sm font-medium transition ${
+                    seedSampleData
+                      ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/30"
+                      : "border-border bg-white hover:bg-muted dark:bg-card"
+                  }`}
+                >
+                  Yes, add samples
+                </button>
+                <button
+                  onClick={() => setSeedSampleData(false)}
+                  className={`flex-1 rounded-lg border p-3 text-sm font-medium transition ${
+                    !seedSampleData
+                      ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/30"
+                      : "border-border bg-white hover:bg-muted dark:bg-card"
+                  }`}
+                >
+                  Start fresh
+                </button>
+              </div>
+            </div>
+          )}
 
           {error && (
             <p className="mt-3 text-sm text-destructive">{error}</p>
