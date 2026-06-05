@@ -14,15 +14,8 @@ import {
 import { BillForm } from "@/components/bills/bill-form";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { BillDetail, OccurrenceDetail, PaymentDetail } from "./actions";
-import { updateBill, deleteBill } from "./actions";
+import { updateBill, deleteBill, updateOccurrenceStatus } from "./actions";
 import Link from "next/link";
-
-const statusVariant: Record<string, "default" | "success" | "warning" | "destructive"> = {
-  unpaid: "default",
-  paid: "success",
-  skipped: "warning",
-  overdue: "destructive"
-};
 
 const priorityColors: Record<string, string> = {
   low: "text-muted-foreground",
@@ -113,6 +106,14 @@ export function BillDetailContent({ bill, occurrences, payments }: BillDetailCon
       setDeleteSubmitting(false);
     }
   }, [bill.id, router]);
+
+  const handleStatusChange = useCallback(
+    async (occurrenceId: string, newStatus: "paid" | "unpaid" | "skipped") => {
+      await updateOccurrenceStatus(occurrenceId, newStatus);
+      router.refresh();
+    },
+    [router]
+  );
 
   const editDefaultValues = {
     name: bill.name,
@@ -233,10 +234,6 @@ export function BillDetailContent({ bill, occurrences, payments }: BillDetailCon
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {occurrences.map((occ) => {
-                  const isOverdue =
-                    occ.status === "unpaid" &&
-                    new Date(occ.dueDate) < new Date(new Date().toDateString());
-                  const displayStatus = isOverdue ? "overdue" : occ.status;
                   return (
                     <div
                       key={occ.id}
@@ -250,9 +247,17 @@ export function BillDetailContent({ bill, occurrences, payments }: BillDetailCon
                         <span className="text-sm font-medium">
                           {formatCurrency(occ.amountCents, occ.currency)}
                         </span>
-                        <Badge variant={statusVariant[displayStatus] ?? "default"} className="capitalize">
-                          {displayStatus}
-                        </Badge>
+                        <select
+                          value={occ.status}
+                          onChange={(e) =>
+                            handleStatusChange(occ.id, e.target.value as "paid" | "unpaid" | "skipped")
+                          }
+                          className="h-7 rounded-md border border-border bg-background px-2 text-xs capitalize focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="unpaid">Unpaid</option>
+                          <option value="paid">Paid</option>
+                          <option value="skipped">Skipped</option>
+                        </select>
                       </div>
                     </div>
                   );

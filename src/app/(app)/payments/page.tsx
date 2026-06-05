@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { RecordPaymentDialog } from "@/components/payments/record-payment-dialog";
 import { PaymentHistoryTable, type PaymentRecord } from "@/components/payments/payment-history-table";
 import { Loader2 } from "lucide-react";
 import { getPayments } from "./actions";
 
 export default function PaymentsPage() {
+  const router = useRouter();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export default function PaymentsPage() {
 
   function handlePaymentRecorded(payment: PaymentRecord) {
     setPayments((prev) => [payment, ...prev]);
+    router.refresh();
   }
 
   return (

@@ -129,7 +129,7 @@ describe("buildDashboardPayload", () => {
     expect(payload.categoryTotals).toContainEqual({ category: "Other", amountCents: 5000 });
   });
 
-  it("excludes occurrences due today from upcoming and monthly obligations", () => {
+  it("includes due-today in monthly obligations but not in upcoming 30 days", () => {
     const payload = buildDashboardPayload({
       today: "2026-05-29",
       dashboardCurrency: "USD",
@@ -141,6 +141,25 @@ describe("buildDashboardPayload", () => {
     });
 
     expect(payload.upcoming30Days).toHaveLength(0);
+    expect(payload.summary.monthlyObligationsCents).toBe(5000);
+  });
+
+  it("only counts current-month unpaid in monthly obligations", () => {
+    const payload = buildDashboardPayload({
+      today: "2026-06-15",
+      dashboardCurrency: "USD",
+      rates,
+      bills: [{ id: "bill-1", name: "Monthly Bill", category: "Other", priority: "low", tags: [] }],
+      occurrences: [
+        { id: "occ-1", billId: "bill-1", dueDate: "2026-06-20", amountCents: 5000, currency: "USD", status: "unpaid" },
+        { id: "occ-2", billId: "bill-1", dueDate: "2026-07-20", amountCents: 5000, currency: "USD", status: "unpaid" },
+        { id: "occ-3", billId: "bill-1", dueDate: "2026-06-01", amountCents: 3000, currency: "USD", status: "paid" },
+        { id: "occ-4", billId: "bill-1", dueDate: "2026-06-10", amountCents: 2000, currency: "USD", status: "unpaid" }
+      ]
+    });
+
+    expect(payload.summary.monthlyObligationsCents).toBe(5000);
+    expect(payload.summary.pendingCount).toBe(3);
   });
 
   it("sorts upcoming 30 days by days until due ascending", () => {

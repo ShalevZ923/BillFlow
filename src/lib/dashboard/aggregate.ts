@@ -75,6 +75,8 @@ export function buildDashboardPayload(input: {
   let overdueCount = 0;
   let overdueAmountCents = 0;
 
+  const currentMonthKey = todayDate.toISOString().slice(0, 7);
+
   const categoryTotalsMap = new Map<string, number>();
   const monthlyBreakdownMap = new Map<string, number>();
   const upcomingList: DashboardPayload["upcoming30Days"] = [];
@@ -83,6 +85,7 @@ export function buildDashboardPayload(input: {
     const bill = billMap.get(occurrence.billId);
     const converted = convertOccurrenceAmount(occurrence, input.dashboardCurrency, input.rates);
     const dueDate = parseISO(occurrence.dueDate);
+    const monthKey = dueDate.toISOString().slice(0, 7);
 
     if (occurrence.status === "overdue") {
       overdueCount++;
@@ -94,7 +97,7 @@ export function buildDashboardPayload(input: {
       pendingCount++;
       pendingAmountCents += converted;
 
-      if (isAfter(dueDate, todayDate) && isBefore(dueDate, todayDate) === false) {
+      if (monthKey === currentMonthKey && !isBefore(dueDate, todayDate)) {
         monthlyObligationsCents += converted;
       }
 
@@ -108,7 +111,6 @@ export function buildDashboardPayload(input: {
     const category = bill?.category ?? "Other";
     categoryTotalsMap.set(category, (categoryTotalsMap.get(category) ?? 0) + converted);
 
-    const monthKey = dueDate.toISOString().slice(0, 7);
     monthlyBreakdownMap.set(monthKey, (monthlyBreakdownMap.get(monthKey) ?? 0) + converted);
 
     if (

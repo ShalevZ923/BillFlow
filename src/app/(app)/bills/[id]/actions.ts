@@ -230,6 +230,48 @@ export async function updateBill(
   return { success: true };
 }
 
+export async function updateOccurrenceStatus(
+  occurrenceId: string,
+  status: "paid" | "unpaid" | "skipped"
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
+  const db = createDb();
+
+  const [occurrence] = await db
+    .select()
+    .from(billOccurrences)
+    .where(eq(billOccurrences.id, occurrenceId))
+    .limit(1);
+
+  if (!occurrence || occurrence.userId !== user.id) {
+    return { success: false, error: "Occurrence not found" };
+  }
+
+  await db
+    .update(billOccurrences)
+    .set({
+      status,
+      updatedAt: new Date()
+    })
+    .where(eq(billOccurrences.id, occurrenceId));
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "updated_occurrence_status",
+    targetType: "occurrence",
+    targetId: occurrenceId,
+    changes: { before: { status: occurrence.status }, after: { status } }
+  });
+
+  revalidatePath(`/bills/${occurrence.billId}`);
+  revalidatePath("/bills");
+  revalidatePath("/dashboard");
+
+  return { success: true };
+}
+
 export async function deleteBill(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
