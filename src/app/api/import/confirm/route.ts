@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server";
 import { parseBillCsv } from "@/lib/csv/import";
 import { createDb } from "@/db/client";
-import { bills, billOccurrences } from "@/db/schema";
+import { bills, billOccurrences, profiles } from "@/db/schema";
 import { generateOccurrences } from "@/lib/billing/recurrence";
+import { createSupabaseServerClient } from "@/lib/auth/server";
+import { eq } from "drizzle-orm";
 import type { BillingCycle } from "@/lib/billing/types";
 
 export async function POST(request: Request) {
   try {
-    const plan = request.headers.get("x-mock-plan") ?? "free";
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const db = createDb();
+    const [profile] = await db
+      .select({ plan: profiles.plan })
+      .from(profiles)
+      .where(eq(profiles.id, user.id));
+
+    const plan = profile?.plan ?? "free";
 
     if (plan !== "pro") {
       return NextResponse.json({ error: "CSV import requires Pro" }, { status: 403 });
@@ -20,8 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No CSV data provided" }, { status: 400 });
     }
 
-    const userId = request.headers.get("x-mock-user-id") ?? "00000000-0000-0000-0000-000000000001";
-    const db = createDb();
+    const userId = user.id;
 
     const preview = parseBillCsv(csvText);
 
@@ -33,21 +46,21 @@ export async function POST(request: Request) {
     }
 
     let imported = 0;
-    for (const { bill } of preview.validRows) {
+    for (const { bill: billRow } of preview.validRows) {
       const [inserted] = await db
         .insert(bills)
         .values({
           userId,
-          name: bill.name,
-          amountCents: bill.amountCents,
-          currency: bill.currency,
-          firstDueDate: bill.dueDate,
-          cycle: bill.cycle as BillingCycle,
+          name: billRow.name,
+          amountCents: billRow.amountCents,
+          currency: billRow.currency,
+          firstDueDate: billRow.dueDate,
+          cycle: billRow.cycle as BillingCycle,
           customCycleDays: undefined,
-          category: bill.category,
-          priority: bill.priority,
-          tags: bill.tags,
-          notes: bill.notes
+          category: billRow.category,
+          priority: billRow.priority,
+          tags: billRow.tags,
+          notes: billRow.notes
         })
         .returning();
 
@@ -55,10 +68,10 @@ export async function POST(request: Request) {
         const occurrences = generateOccurrences({
           billId: inserted.id,
           userId,
-          startDate: bill.dueDate,
-          cycle: bill.cycle,
-          amountCents: bill.amountCents,
-          currency: bill.currency,
+          startDate: billRow.dueDate,
+          cycle: billRow.cycle,
+          amountCents: billRow.amountCents,
+          currency: billRow.currency,
           monthsAhead: 12
         });
 

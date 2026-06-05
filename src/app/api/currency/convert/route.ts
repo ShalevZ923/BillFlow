@@ -3,7 +3,8 @@ import { z } from "zod";
 import { supportedCurrencies } from "@/lib/billing/types";
 import { convertToMany } from "@/lib/currency/conversion";
 import { createDb } from "@/db/client";
-import { exchangeRateSnapshots } from "@/db/schema";
+import { exchangeRateSnapshots, profiles } from "@/db/schema";
+import { createSupabaseServerClient } from "@/lib/auth/server";
 import { eq } from "drizzle-orm";
 
 const convertSchema = z.object({
@@ -14,7 +15,19 @@ const convertSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const plan = request.headers.get("x-mock-plan") ?? "free";
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const db = createDb();
+    const [profile] = await db
+      .select({ plan: profiles.plan })
+      .from(profiles)
+      .where(eq(profiles.id, user.id));
+
+    const plan = profile?.plan ?? "free";
 
     if (plan !== "pro") {
       return NextResponse.json(
@@ -32,7 +45,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = createDb();
     const [snapshot] = await db
       .select()
       .from(exchangeRateSnapshots)

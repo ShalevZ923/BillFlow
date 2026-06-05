@@ -4,12 +4,20 @@ import { billInputSchema } from "@/lib/billing/validation";
 import { canCreateBill, type Plan } from "@/lib/plans/limits";
 import { generateOccurrences } from "@/lib/billing/recurrence";
 import { createDb } from "@/db/client";
-import { bills, billOccurrences } from "@/db/schema";
+import { bills, billOccurrences, profiles } from "@/db/schema";
 import { logAuditEvent } from "@/lib/audit/log";
+import { createSupabaseServerClient } from "@/lib/auth/server";
+import { eq } from "drizzle-orm";
 import type { BillingCycle } from "@/lib/billing/types";
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const parsed = billInputSchema.safeParse(body);
@@ -20,14 +28,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // In production, derive userId from Supabase session.
-    // For MVP scaffolding, accept a temporary mock header.
-    const userId = request.headers.get("x-mock-user-id") ?? "00000000-0000-0000-0000-000000000001";
-    const plan: Plan = (request.headers.get("x-mock-plan") as Plan | null) ?? "free";
-
     const db = createDb();
+    const [profile] = await db
+      .select({ plan: profiles.plan })
+      .from(profiles)
+      .where(eq(profiles.id, user.id));
 
-    const currentBillCount = await db.$count(bills, sql`1=1`);
+    const userId = user.id;
+    const plan: Plan = profile?.plan ?? "free";
+
+    const currentBillCount = await db
+      .$count(bills, sql`${bills.userId} = ${userId}`);
     const limit = canCreateBill({ plan, currentBillCount });
     if (!limit.allowed) {
       return NextResponse.json({ error: limit.reason }, { status: 402 });

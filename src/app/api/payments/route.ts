@@ -5,9 +5,16 @@ import { createDb } from "@/db/client";
 import { paymentRecords, billOccurrences } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { logAuditEvent } from "@/lib/audit/log";
+import { createSupabaseServerClient } from "@/lib/auth/server";
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const parsed = paymentRecordSchema.safeParse(body);
@@ -18,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = request.headers.get("x-mock-user-id") ?? "00000000-0000-0000-0000-000000000001";
+    const userId = user.id;
     const db = createDb();
 
     const [inserted] = await db

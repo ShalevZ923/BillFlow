@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateFillSuggestion } from "@/lib/ai/ai-fill";
+import { createSupabaseServerClient } from "@/lib/auth/server";
+import { createDb } from "@/db/client";
+import { profiles } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 const fillSchema = z.object({
   text: z.string().min(1, "Text is required").max(5000)
@@ -8,7 +12,19 @@ const fillSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const plan = request.headers.get("x-mock-plan") ?? "free";
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const db = createDb();
+    const [profile] = await db
+      .select({ plan: profiles.plan })
+      .from(profiles)
+      .where(eq(profiles.id, user.id));
+
+    const plan = profile?.plan ?? "free";
 
     if (plan !== "pro") {
       return NextResponse.json({ error: "AI Fill requires Pro" }, { status: 403 });
