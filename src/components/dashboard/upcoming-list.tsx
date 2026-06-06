@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { clsx } from "clsx";
 import { format } from "date-fns";
 import { Calendar } from "lucide-react";
@@ -46,7 +47,7 @@ function formatDueDate(dateStr: string): string {
   }
 }
 
-export function UpcomingList({ items }: UpcomingListProps) {
+export const UpcomingList = memo(function UpcomingList({ items }: UpcomingListProps) {
   return (
     <Card>
       <CardHeader>
@@ -94,4 +95,4 @@ export function UpcomingList({ items }: UpcomingListProps) {
       </CardContent>
     </Card>
   );
-}
+});

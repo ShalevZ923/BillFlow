@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,13 +44,47 @@ const priorityOptions: Array<{ label: string; value: BillPriority }> = [
   { label: "Low", value: "low" }
 ];
 
-export function DashboardFilters({ filters, categories, tags, onFilterChange, searchLoading }: DashboardFiltersProps) {
+const CLEAR_FILTERS: DashboardFilterState = { search: "", status: null, category: null, tag: null, priority: null };
+
+export const DashboardFilters = memo(function DashboardFilters({ filters, categories, tags, onFilterChange, searchLoading }: DashboardFiltersProps) {
   const activeCount =
     (filters.search ? 1 : 0) +
     (filters.status ? 1 : 0) +
     (filters.category ? 1 : 0) +
     (filters.tag ? 1 : 0) +
     (filters.priority ? 1 : 0);
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onFilterChange({ ...filters, search: e.target.value }),
+    [filters, onFilterChange]
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string | null) =>
+      onFilterChange({ ...filters, status: value === "all" || value === null ? null : value as OccurrenceStatus }),
+    [filters, onFilterChange]
+  );
+
+  const handlePriorityChange = useCallback(
+    (value: string | null) =>
+      onFilterChange({ ...filters, priority: value === "all" || value === null ? null : value as BillPriority }),
+    [filters, onFilterChange]
+  );
+
+  const handleCategoryChange = useCallback(
+    (value: string | null) =>
+      onFilterChange({ ...filters, category: value === "all" || value === null ? null : value }),
+    [filters, onFilterChange]
+  );
+
+  const handleTagChange = useCallback(
+    (value: string | null) =>
+      onFilterChange({ ...filters, tag: value === "all" || value === null ? null : value }),
+    [filters, onFilterChange]
+  );
+
+  const handleClear = useCallback(() => onFilterChange(CLEAR_FILTERS), [onFilterChange]);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -65,22 +100,14 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange, se
           className="pl-9 pr-9"
           placeholder="Search bills..."
           value={filters.search}
-          onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
+          onChange={handleSearchChange}
         />
         {searchLoading && (
           <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
       </div>
 
-      <Select
-        value={filters.status ?? "all"}
-        onValueChange={(value) =>
-          onFilterChange({
-            ...filters,
-            status: value === "all" ? null : (value as OccurrenceStatus)
-          })
-        }
-      >
+      <Select value={filters.status ?? "all"} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -94,15 +121,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange, se
         </SelectContent>
       </Select>
 
-      <Select
-        value={filters.priority ?? "all"}
-        onValueChange={(value) =>
-          onFilterChange({
-            ...filters,
-            priority: value === "all" ? null : (value as BillPriority)
-          })
-        }
-      >
+      <Select value={filters.priority ?? "all"} onValueChange={handlePriorityChange}>
         <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
@@ -117,12 +136,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange, se
       </Select>
 
       {categories.length > 0 && (
-        <Select
-          value={filters.category ?? "all"}
-          onValueChange={(value) =>
-            onFilterChange({ ...filters, category: value === "all" ? null : value })
-          }
-        >
+        <Select value={filters.category ?? "all"} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -138,12 +152,7 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange, se
       )}
 
       {tags.length > 0 && (
-        <Select
-          value={filters.tag ?? "all"}
-          onValueChange={(value) =>
-            onFilterChange({ ...filters, tag: value === "all" ? null : value })
-          }
-        >
+        <Select value={filters.tag ?? "all"} onValueChange={handleTagChange}>
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Tag" />
           </SelectTrigger>
@@ -159,17 +168,11 @@ export function DashboardFilters({ filters, categories, tags, onFilterChange, se
       )}
 
       {(filters.search || filters.status || filters.category || filters.tag || filters.priority) && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() =>
-            onFilterChange({ search: "", status: null, category: null, tag: null, priority: null })
-          }
-        >
+        <Button variant="ghost" size="sm" onClick={handleClear}>
           <X size={14} />
           Clear
         </Button>
       )}
     </div>
   );
-}
+});

@@ -2,14 +2,23 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { getEnv } from "@/lib/env";
 
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    const env = getEnv();
+    openaiClient = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
+
 export async function generateStructuredResponse<T>(input: {
   system: string;
   user: string;
   schema: z.ZodSchema<T>;
   model?: OpenAI;
 }): Promise<T> {
-  const env = getEnv();
-  const client = input.model ?? new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  const client = input.model ?? getOpenAI();
 
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",

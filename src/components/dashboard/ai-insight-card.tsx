@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,12 @@ type AiInsightCardProps = {
   generatedAt?: string;
 };
 
-export function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiInsightCardProps) {
+export const AiInsightCard = memo(function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiInsightCardProps) {
+  const generatedDateStr = useMemo(
+    () => generatedAt ? new Date(generatedAt).toLocaleDateString() : undefined,
+    [generatedAt]
+  );
+
   if (plan === "free") {
     return (
       <Card className="border-dashed">
@@ -61,9 +67,9 @@ export function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiIns
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-primary" />
           <CardTitle>AI Insights</CardTitle>
-          {generatedAt && (
+          {generatedDateStr && (
             <span className="ml-auto text-xs text-muted-foreground">
-              {new Date(generatedAt).toLocaleDateString()}
+              {generatedDateStr}
             </span>
           )}
         </div>
@@ -83,4 +89,4 @@ export function AiInsightCard({ plan, summary, suggestions, generatedAt }: AiIns
       </CardContent>
     </Card>
   );
-}
+});

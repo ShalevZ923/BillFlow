@@ -1,7 +1,9 @@
+"use client";
+
+import { memo, useState, useCallback, useMemo } from "react";
 import { clsx } from "clsx";
 import { Calendar, Tag } from "lucide-react";
 import Link from "next/link";
-import { useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BillCardMenu } from "@/components/bills/bill-card-menu";
@@ -65,7 +67,7 @@ function toBillData(props: BillCardProps): BillData {
   };
 }
 
-export function BillCard({
+export const BillCard = memo(function BillCard({
   id,
   name,
   amountCents,
@@ -82,9 +84,11 @@ export function BillCard({
 }: BillCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"edit" | "delete">("edit");
-  const billData = toBillData({
-    id, name, amountCents, currency, dueDate, category, priority, status, tags, vendor, cycle, notes
-  });
+
+  const billData = useMemo(
+    () => toBillData({ id, name, amountCents, currency, dueDate, category, priority, status, tags, vendor, cycle, notes, onChange }),
+    [id, name, amountCents, currency, dueDate, category, priority, status, tags, vendor, cycle, notes, onChange]
+  );
 
   const handleSaved = useCallback(() => {
     onChange?.();
@@ -157,4 +161,4 @@ export function BillCard({
       />
     </>
   );
-}
+});

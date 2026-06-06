@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { useState, useCallback, useEffect } from "react"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -27,14 +27,14 @@ const dismissDelay: Record<ToastVariant, number> = {
 }
 
 function Toast({ message, variant, onDismiss }: ToastProps) {
-  const [visible, setVisible] = React.useState(true)
+  const [visible, setVisible] = useState(true)
 
-  const handleDismiss = React.useCallback(() => {
+  const handleDismiss = useCallback(() => {
     setVisible(false)
     setTimeout(() => onDismiss?.(), 200)
   }, [onDismiss])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(handleDismiss, dismissDelay[variant])
     return () => clearTimeout(timer)
   }, [variant, handleDismiss])

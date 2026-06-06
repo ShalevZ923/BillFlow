@@ -1,13 +1,13 @@
 "use client"
 
-import * as React from "react"
+import { forwardRef, type ComponentProps } from "react"
 import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Checkbox = React.forwardRef<
+const Checkbox = forwardRef<
   HTMLInputElement,
-  React.ComponentProps<"input">
+  ComponentProps<"input">
 >(function Checkbox({ className, disabled, ...props }, ref) {
   return (
     <span

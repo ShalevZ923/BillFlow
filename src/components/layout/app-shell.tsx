@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 type AppShellProps = {
   children: ReactNode;
 };
+
+const EMPTY_NOTIFICATION_COUNTS = {};
 
 export function AppShell({ children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -34,20 +36,25 @@ export function AppShell({ children }: AppShellProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileOpen]);
 
+  const handleToggleCollapse = useCallback(() => setCollapsed((c) => !c), []);
+  const handleMobileClose = useCallback(() => setMobileOpen(false), []);
+  const handleMobileOpen = useCallback(() => setMobileOpen(true), []);
+  const handleOverlayClose = useCallback(() => setMobileOpen(false), []);
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
-        notificationCounts={{}}
+        onToggleCollapse={handleToggleCollapse}
+        notificationCounts={EMPTY_NOTIFICATION_COUNTS}
         mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
+        onMobileClose={handleMobileClose}
       />
 
       {mobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setMobileOpen(false)}
+          onClick={handleOverlayClose}
         />
       )}
 
@@ -57,7 +64,7 @@ export function AppShell({ children }: AppShellProps) {
             <span className="font-semibold dark:text-foreground">BillFlow</span>
             <span className="ml-1 text-xs text-muted-foreground">by SeeHy</span>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(true)}>
+          <Button variant="ghost" size="icon-sm" onClick={handleMobileOpen}>
             <Menu />
           </Button>
         </header>

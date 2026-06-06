@@ -1,12 +1,14 @@
 "use server";
 
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, gte } from "drizzle-orm";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords, exchangeRateSnapshots, profiles } from "@/db/schema";
 import type { CurrencyCode } from "@/lib/billing/types";
 import type { ExchangeRates } from "@/lib/currency/conversion";
 import { syncOverdueOccurrences } from "@/lib/billing/recurrence";
+
+const DASHBOARD_MONTHS = 30;
 
 export type DashboardBillData = {
   id: string;
@@ -71,22 +73,65 @@ export async function getDashboardData(search?: string): Promise<DashboardData> 
     ? sql`${bills.userId} = ${user.id} AND (${bills.name} ILIKE ${searchPattern} OR ${bills.vendor} ILIKE ${searchPattern} OR ${bills.notes} ILIKE ${searchPattern} OR ${bills.category} ILIKE ${searchPattern})`
     : eq(bills.userId, user.id);
 
-  const occurrencesWhere = searchPattern
-    ? sql`${billOccurrences.userId} = ${user.id} AND EXISTS (SELECT 1 FROM ${bills} WHERE ${bills.id} = ${billOccurrences.billId} AND (${bills.name} ILIKE ${searchPattern} OR ${bills.vendor} ILIKE ${searchPattern} OR ${bills.notes} ILIKE ${searchPattern} OR ${bills.category} ILIKE ${searchPattern}))`
-    : eq(billOccurrences.userId, user.id);
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - DASHBOARD_MONTHS);
+  const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+
+  const occurrencesWhere = sql`${billOccurrences.userId} = ${user.id} AND ${billOccurrences.dueDate} >= ${cutoffStr}::date`;
 
   const [userBills, userOccurrences, userPayments, [rateSnapshot], [profile]] =
     await Promise.all([
-      db.select().from(bills).where(billsWhere),
-      db.select().from(billOccurrences).where(occurrencesWhere),
-      db.select().from(paymentRecords).where(eq(paymentRecords.userId, user.id)),
       db
-        .select()
+        .select({
+          id: bills.id,
+          name: bills.name,
+          vendor: bills.vendor,
+          category: bills.category,
+          priority: bills.priority,
+          tags: bills.tags,
+          cycle: bills.cycle,
+          notes: bills.notes
+        })
+        .from(bills)
+        .where(billsWhere),
+      db
+        .select({
+          id: billOccurrences.id,
+          billId: billOccurrences.billId,
+          dueDate: billOccurrences.dueDate,
+          amountCents: billOccurrences.amountCents,
+          currency: billOccurrences.currency,
+          status: billOccurrences.status
+        })
+        .from(billOccurrences)
+        .where(occurrencesWhere),
+      db
+        .select({
+          id: paymentRecords.id,
+          occurrenceId: paymentRecords.occurrenceId,
+          paidAmountCents: paymentRecords.paidAmountCents,
+          paidCurrency: paymentRecords.paidCurrency,
+          paidDate: paymentRecords.paidDate,
+          method: paymentRecords.method,
+          note: paymentRecords.note
+        })
+        .from(paymentRecords)
+        .where(eq(paymentRecords.userId, user.id)),
+      db
+        .select({
+          base: exchangeRateSnapshots.base,
+          rates: exchangeRateSnapshots.rates,
+          updatedAt: exchangeRateSnapshots.updatedAt
+        })
         .from(exchangeRateSnapshots)
         .where(eq(exchangeRateSnapshots.id, "global"))
         .limit(1),
       db
-        .select()
+        .select({
+          name: profiles.name,
+          defaultCurrency: profiles.defaultCurrency,
+          onboardingCompletedAt: profiles.onboardingCompletedAt
+        })
         .from(profiles)
         .where(eq(profiles.id, user.id))
         .limit(1)

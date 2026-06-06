@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { memo, useState, useCallback, useEffect, useMemo } from "react";
 import { Pencil, Loader2, AlertTriangle } from "lucide-react";
 import { BillForm } from "@/components/bills/bill-form";
 import {
@@ -26,7 +26,7 @@ type EditBillDialogProps = {
   initialMode?: "edit" | "delete";
 };
 
-export function EditBillDialog({
+export const EditBillDialog = memo(function EditBillDialog({
   bill,
   open,
   onOpenChange,
@@ -122,7 +122,7 @@ export function EditBillDialog({
     [onOpenChange]
   );
 
-  const defaultValues = {
+  const defaultValues = useMemo(() => ({
     name: bill.name,
     vendor: bill.vendor,
     amount: formatCents(bill.amountCents),
@@ -134,7 +134,7 @@ export function EditBillDialog({
     status: "unpaid" as const,
     tags: bill.tags.join(", "),
     notes: bill.notes
-  };
+  }), [bill.name, bill.vendor, bill.amountCents, bill.currency, bill.dueDate, bill.cycle, bill.category, bill.priority, bill.tags, bill.notes]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -272,4 +272,4 @@ export function EditBillDialog({
       </DialogContent>
     </Dialog>
   );
-}
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { memo, useMemo, useSyncExternalStore } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,11 +17,28 @@ type CategoryChartProps = {
   categoryTotals: Array<{ category: string; amountCents: number }>;
 };
 
-export function CategoryChart({ categoryTotals }: CategoryChartProps) {
+export const CategoryChart = memo(function CategoryChart({ categoryTotals }: CategoryChartProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
+  );
+
+  const data = useMemo(
+    () =>
+      categoryTotals.map((item) => ({
+        name: item.category,
+        value: Math.round(item.amountCents / 100)
+      })),
+    [categoryTotals]
+  );
+
+  const cells = useMemo(
+    () =>
+      data.map((_, index) => (
+        <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+      )),
+    [data]
   );
 
   if (categoryTotals.length === 0) {
@@ -54,11 +71,6 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
     );
   }
 
-  const data = categoryTotals.map((item) => ({
-    name: item.category,
-    value: Math.round(item.amountCents / 100)
-  }));
-
   return (
     <Card>
       <CardHeader>
@@ -77,9 +89,7 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
                 paddingAngle={2}
                 dataKey="value"
               >
-                {data.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
+                {cells}
               </Pie>
               <Tooltip
                 contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
@@ -92,4 +102,4 @@ export function CategoryChart({ categoryTotals }: CategoryChartProps) {
       </CardContent>
     </Card>
   );
-}
+});

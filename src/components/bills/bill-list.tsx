@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { BillCard } from "@/components/bills/bill-card";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 
@@ -26,7 +26,7 @@ type BillListProps = {
   onChange?: () => void;
 };
 
-export function BillList({ bills, emptyStateText, searchQuery, onChange }: BillListProps) {
+export const BillList = memo(function BillList({ bills, emptyStateText, searchQuery, onChange }: BillListProps) {
   const filtered = useMemo(() => {
     if (!searchQuery) return bills;
     const q = searchQuery.toLowerCase();
@@ -76,4 +76,4 @@ export function BillList({ bills, emptyStateText, searchQuery, onChange }: BillL
       ))}
     </div>
   );
-}
+});

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getEnv } from "@/lib/env";
 import { createDb } from "@/db/client";
 import { profiles, aiInsights, bills, billOccurrences } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { generateDailyInsight } from "@/lib/ai/insights";
 
 export async function GET(request: Request) {
@@ -23,22 +23,43 @@ export async function GET(request: Request) {
       .from(profiles)
       .where(eq(profiles.plan, "pro"));
 
+    const userIds = proUsers.map((u) => u.id);
+
+    if (userIds.length === 0) {
+      return NextResponse.json({ generated: 0, failed: 0 });
+    }
+
+    const [allUserBills, allUserOccurrences] = await Promise.all([
+      db.select().from(bills).where(inArray(bills.userId, userIds)),
+      db
+        .select()
+        .from(billOccurrences)
+        .where(inArray(billOccurrences.userId, userIds))
+    ]);
+
+    const billsByUser = new Map<string, typeof allUserBills>();
+    const occurrencesByUser = new Map<string, typeof allUserOccurrences>();
+
+    for (const bill of allUserBills) {
+      const list = billsByUser.get(bill.userId) ?? [];
+      list.push(bill);
+      billsByUser.set(bill.userId, list);
+    }
+
+    for (const occ of allUserOccurrences) {
+      const list = occurrencesByUser.get(occ.userId) ?? [];
+      list.push(occ);
+      occurrencesByUser.set(occ.userId, list);
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
     let generated = 0;
     let failed = 0;
 
-    const today = new Date().toISOString().slice(0, 10);
-
     for (const user of proUsers) {
       try {
-        const userBills = await db
-          .select()
-          .from(bills)
-          .where(eq(bills.userId, user.id));
-
-        const userOccurrences = await db
-          .select()
-          .from(billOccurrences)
-          .where(eq(billOccurrences.userId, user.id));
+        const userBills = billsByUser.get(user.id) ?? [];
+        const userOccurrences = occurrencesByUser.get(user.id) ?? [];
 
         const totalBills = userBills.length;
 
@@ -54,10 +75,10 @@ export async function GET(request: Request) {
         const pendingCount = pendingOccurrences.length;
         const pendingAmount = pendingOccurrences.reduce((sum, o) => sum + o.amountCents, 0);
 
+        const billMap = new Map(userBills.map((b) => [b.id, b]));
         const categoryMap = new Map<string, number>();
         for (const o of userOccurrences) {
-          const bill = userBills.find((b) => b.id === o.billId);
-          const cat = bill?.category ?? "Other";
+          const cat = billMap.get(o.billId)?.category ?? "Other";
           categoryMap.set(cat, (categoryMap.get(cat) ?? 0) + o.amountCents);
         }
         const categories = Array.from(categoryMap.entries()).map(([category, amount]) => ({

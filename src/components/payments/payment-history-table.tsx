@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 
 export type PaymentRecord = {
@@ -22,7 +23,7 @@ function formatCents(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
-export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
+export const PaymentHistoryTable = memo(function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
   if (payments.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-white p-12 text-center">
@@ -69,4 +70,4 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
       </table>
     </div>
   );
-}
+});

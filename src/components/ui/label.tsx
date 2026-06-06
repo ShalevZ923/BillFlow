@@ -1,10 +1,10 @@
-import * as React from "react"
+import { forwardRef, type ComponentProps } from "react"
 
 import { cn } from "@/lib/utils"
 
-const Label = React.forwardRef<
+const Label = forwardRef<
   HTMLLabelElement,
-  React.ComponentProps<"label">
+  ComponentProps<"label">
 >(function Label({ className, ...props }, ref) {
   return (
     <label

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { memo, useMemo, useSyncExternalStore } from "react";
 import { format, parse } from "date-fns";
 import {
   BarChart,
@@ -28,11 +28,20 @@ type MonthlyBreakdownProps = {
   monthlyBreakdown: Array<{ month: string; amountCents: number }>;
 };
 
-export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
+export const MonthlyBreakdown = memo(function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
+  );
+
+  const data = useMemo(
+    () =>
+      monthlyBreakdown.map((item) => ({
+        name: formatMonthLabel(item.month),
+        amount: Math.round(item.amountCents / 100)
+      })),
+    [monthlyBreakdown]
   );
 
   if (monthlyBreakdown.length === 0) {
@@ -69,11 +78,6 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
     );
   }
 
-  const data = monthlyBreakdown.map((item) => ({
-    name: formatMonthLabel(item.month),
-    amount: Math.round(item.amountCents / 100)
-  }));
-
   return (
     <Card>
       <CardHeader>
@@ -97,4 +101,4 @@ export function MonthlyBreakdown({ monthlyBreakdown }: MonthlyBreakdownProps) {
       </CardContent>
     </Card>
   );
-}
+});

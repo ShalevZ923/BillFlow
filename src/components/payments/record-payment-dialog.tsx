@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { PaymentForm, type PaymentFormValues } from "@/components/payments/payment-form";
 import {
   Dialog,
@@ -28,7 +28,7 @@ type RecordPaymentDialogProps = {
   onPaymentRecorded: (payment: PaymentRecord) => void;
 };
 
-export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogProps) {
+export const RecordPaymentDialog = memo(function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,16 +38,7 @@ export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogPr
   const [loadingOccurrences, setLoadingOccurrences] = useState(false);
   const [selectedOccurrence, setSelectedOccurrence] = useState<OccurrenceOption | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      setSelectedOccurrence(null);
-      setSuccess(false);
-      setError(null);
-      loadOccurrences();
-    }
-  }, [open]);
-
-  async function loadOccurrences() {
+  const loadOccurrences = useCallback(async () => {
     setLoadingOccurrences(true);
     try {
       const data = await getUnpaidOccurrences();
@@ -57,9 +48,18 @@ export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogPr
     } finally {
       setLoadingOccurrences(false);
     }
-  }
+  }, []);
 
-  async function handleSubmit(data: PaymentFormValues) {
+  useEffect(() => {
+    if (open) {
+      setSelectedOccurrence(null);
+      setSuccess(false);
+      setError(null);
+      loadOccurrences();
+    }
+  }, [open, loadOccurrences]);
+
+  const handleSubmit = useCallback(async (data: PaymentFormValues) => {
     setIsSubmitting(true);
     setError(null);
 
@@ -101,11 +101,16 @@ export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogPr
       setIsSubmitting(false);
       setError(e instanceof Error ? e.message : "Failed to record payment");
     }
-  }
+  }, [selectedOccurrence, onPaymentRecorded]);
 
-  function handleOpenChange(open: boolean) {
+  const handleOpenChange = useCallback((open: boolean) => {
     setOpen(open);
-  }
+  }, []);
+
+  const handleSelectOccurrence = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const occ = occurrences.find((o) => o.id === e.target.value);
+    if (occ) setSelectedOccurrence(occ);
+  }, [occurrences]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -212,10 +217,7 @@ export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogPr
                   <p className="text-sm text-muted-foreground">Select a bill occurrence to pay:</p>
                   <select
                     className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                    onChange={(e) => {
-                      const occ = occurrences.find((o) => o.id === e.target.value);
-                      if (occ) setSelectedOccurrence(occ);
-                    }}
+                    onChange={handleSelectOccurrence}
                     defaultValue=""
                   >
                     <option value="" disabled>Select a bill...</option>
@@ -233,4 +235,4 @@ export function RecordPaymentDialog({ onPaymentRecorded }: RecordPaymentDialogPr
       </DialogContent>
     </Dialog>
   );
-}
+});

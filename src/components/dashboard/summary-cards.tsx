@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Calendar, Clock, DollarSign } from "lucide-react";
 
@@ -14,7 +15,7 @@ type SummaryCardsProps = {
   overdueAmountCents: number;
 };
 
-export function SummaryCards({
+export const SummaryCards = memo(function SummaryCards({
   monthlyObligationsCents,
   yearlyProjectionCents,
   pendingCount,
@@ -22,6 +23,13 @@ export function SummaryCards({
   overdueCount,
   overdueAmountCents
 }: SummaryCardsProps) {
+  const formatted = useMemo(() => ({
+    monthly: formatCents(monthlyObligationsCents),
+    yearly: formatCents(yearlyProjectionCents),
+    pending: formatCents(pendingAmountCents),
+    overdue: formatCents(overdueAmountCents)
+  }), [monthlyObligationsCents, yearlyProjectionCents, pendingAmountCents, overdueAmountCents]);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -32,7 +40,7 @@ export function SummaryCards({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Monthly Obligations</p>
-              <p className="text-xl font-bold">${formatCents(monthlyObligationsCents)}</p>
+              <p className="text-xl font-bold">${formatted.monthly}</p>
             </div>
           </div>
         </CardContent>
@@ -46,7 +54,7 @@ export function SummaryCards({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Yearly Projection</p>
-              <p className="text-xl font-bold">${formatCents(yearlyProjectionCents)}</p>
+              <p className="text-xl font-bold">${formatted.yearly}</p>
             </div>
           </div>
         </CardContent>
@@ -61,7 +69,7 @@ export function SummaryCards({
             <div>
               <p className="text-sm text-muted-foreground">Pending</p>
               <p className="text-xl font-bold">
-                {pendingCount} / ${formatCents(pendingAmountCents)}
+                {pendingCount} / ${formatted.pending}
               </p>
             </div>
           </div>
@@ -77,7 +85,7 @@ export function SummaryCards({
             <div>
               <p className="text-sm text-muted-foreground">Overdue</p>
               <p className="text-xl font-bold">
-                {overdueCount} / ${formatCents(overdueAmountCents)}
+                {overdueCount} / ${formatted.overdue}
               </p>
             </div>
           </div>
@@ -85,4 +93,4 @@ export function SummaryCards({
       </Card>
     </div>
   );
-}
+});
