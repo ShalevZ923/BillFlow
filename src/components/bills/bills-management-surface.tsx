@@ -42,6 +42,8 @@ type BillsManagementSurfaceProps = {
   bills: BillData[];
   onBillCreated: (bill: BillListItem) => void;
   onBillsChanged: () => void;
+  initialSelectedBillId?: string | null;
+  onSelectedBillClosed?: () => void;
 };
 
 const statusTabs = ["All", "Overdue", "Unpaid", "Paid"] as const;
@@ -111,13 +113,15 @@ function getMonthlyTotal(bills: BillData[]): number {
 export function BillsManagementSurface({
   bills,
   onBillCreated,
-  onBillsChanged
+  onBillsChanged,
+  initialSelectedBillId = null,
+  onSelectedBillClosed
 }: BillsManagementSurfaceProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof statusTabs)[number]>("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
-  const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
+  const [selectedBillId, setSelectedBillId] = useState<string | null>(initialSelectedBillId);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [dialogMode, setDialogMode] = useState<"edit" | "delete">("edit");
 
@@ -188,6 +192,11 @@ export function BillsManagementSurface({
     setDialogMode("delete");
     setEditingBillId(billId);
   }, []);
+
+  const closeSelectedBill = useCallback(() => {
+    setSelectedBillId(null);
+    onSelectedBillClosed?.();
+  }, [onSelectedBillClosed]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -405,7 +414,7 @@ export function BillsManagementSurface({
       <BillDetailDialog
         bill={selectedBill}
         onOpenChange={(open) => {
-          if (!open) setSelectedBillId(null);
+          if (!open) closeSelectedBill();
         }}
         onEdit={openEdit}
         onDelete={openDelete}

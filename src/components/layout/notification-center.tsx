@@ -24,21 +24,16 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const ids: string[] = JSON.parse(stored);
-        setReadIds(new Set(ids));
-      }
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
     } catch {
-      // localStorage not available or corrupted
+      return new Set();
     }
-  }, []);
+  });
+  const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -86,7 +81,7 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
     (notification: Notification) => {
       setReadIds((prev) => new Set([...prev, notification.id]));
       setOpen(false);
-      router.push(`/bills/${notification.billId}`);
+      router.push(`/bills?bill=${encodeURIComponent(notification.billId)}`);
     },
     [router]
   );

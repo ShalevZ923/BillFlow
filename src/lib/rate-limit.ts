@@ -3,7 +3,7 @@ const maxRequests = 30;
 
 const store = new Map<string, { count: number; resetAt: number }>();
 
-const pruneInterval = setInterval(() => {
+setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of store) {
     if (now > entry.resetAt) {

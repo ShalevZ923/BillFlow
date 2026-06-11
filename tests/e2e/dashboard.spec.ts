@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Dashboard - shadcn/ui redesign", () => {
+test.describe("Dashboard - workflow command center", () => {
   test("renders header and tab navigation", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.getByText("Welcome back")).toBeVisible();
@@ -17,8 +17,9 @@ test.describe("Dashboard - shadcn/ui redesign", () => {
 
   test("summary KPI cards render with shadcn Card", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText("Monthly Obligations")).toBeVisible();
-    await expect(page.getByText("Yearly Projection")).toBeVisible();
+    await expect(page.getByText("Due this week")).toBeVisible();
+    await expect(page.getByText("Paid MTD")).toBeVisible();
+    await expect(page.getByText("Year projection")).toBeVisible();
     const cards = page.locator("[data-slot=card]");
     expect(await cards.count()).toBeGreaterThan(0);
   });
@@ -29,44 +30,31 @@ test.describe("Dashboard - shadcn/ui redesign", () => {
     await expect(page.getByText("Monthly Cost Breakdown")).toBeVisible();
   });
 
-  test("upcoming list renders with status badges", async ({ page }) => {
+  test("due queue renders as the primary workflow module", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText("Upcoming 30 Days")).toBeVisible();
-    const badges = page.locator("[data-slot=badge]");
-    await expect(badges.first()).toBeVisible();
+    await expect(page.getByText("Due queue")).toBeVisible();
+    await expect(page.getByText(/Overdue, due-today, and upcoming bills/)).toBeVisible();
   });
 
-  test("AI insights card renders", async ({ page }) => {
+  test("right rail and secondary modules render", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText("AI Insights")).toBeVisible();
+    await expect(page.getByText("Next actions")).toBeVisible();
+    await expect(page.getByText("Queue health")).toBeVisible();
+    await expect(page.getByText("Recent activity")).toBeVisible();
+    await expect(page.getByText("Recent bills")).toBeVisible();
   });
 
-  test("bill list with filters and shadcn Select components renders", async ({ page }) => {
-    await page.goto("/dashboard");
-    await expect(page.getByText("All Bills")).toBeVisible();
-
-    const searchInputs = page.getByPlaceholder("Search bills...");
-    await expect(searchInputs.first()).toBeVisible();
-
-    const selectTriggers = page.locator("[data-slot=select-trigger]");
-    expect(await selectTriggers.count()).toBeGreaterThan(0);
-  });
-
-  test("shadcn Select triggers are present on dashboard", async ({ page }) => {
+  test("dashboard currency selector is present", async ({ page }) => {
     await page.goto("/dashboard");
     const selectTriggers = page.locator("[data-slot=select-trigger]");
-    const count = await selectTriggers.count();
-    expect(count).toBeGreaterThanOrEqual(3);
-    for (let i = 0; i < count; i++) {
-      await expect(selectTriggers.nth(i)).toBeVisible();
-    }
+    await expect(selectTriggers.first()).toBeVisible();
   });
 
   test("dashboard is responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/dashboard");
     await expect(page.getByText("Welcome back")).toBeVisible();
-    await expect(page.getByText("Monthly Obligations")).toBeVisible();
+    await expect(page.getByText("Due queue")).toBeVisible();
   });
 
   test("shadcn Button components render", async ({ page }) => {

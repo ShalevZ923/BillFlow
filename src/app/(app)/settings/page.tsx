@@ -12,6 +12,8 @@ import type { CurrencyCode } from "@/lib/billing/types";
 import { getProfile, updateProfile, deleteAccount } from "./actions";
 import Link from "next/link";
 
+type Profile = NonNullable<Awaited<ReturnType<typeof getProfile>>>;
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,28 +29,39 @@ export default function SettingsPage() {
   const [emailRemindersEnabled, setEmailRemindersEnabled] = useState(true);
   const [pushRemindersEnabled, setPushRemindersEnabled] = useState(false);
 
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
-    try {
-      const profile = await getProfile();
-      if (profile) {
-        setName(profile.name);
-        setEmail(profile.email);
-        setPlan(profile.plan);
-        setDefaultCurrency(profile.defaultCurrency);
-        setEmailRemindersEnabled(profile.emailRemindersEnabled);
-        setPushRemindersEnabled(profile.pushRemindersEnabled);
-      }
-    } catch {
-      setToast({ message: "Failed to load profile", variant: "error" });
-    } finally {
-      setLoading(false);
-    }
+  const applyProfile = useCallback((profile: Profile) => {
+    setName(profile.name);
+    setEmail(profile.email);
+    setPlan(profile.plan);
+    setDefaultCurrency(profile.defaultCurrency);
+    setEmailRemindersEnabled(profile.emailRemindersEnabled);
+    setPushRemindersEnabled(profile.pushRemindersEnabled);
   }, []);
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    let cancelled = false;
+
+    void getProfile()
+      .then((profile) => {
+        if (!cancelled && profile) {
+          applyProfile(profile);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setToast({ message: "Failed to load profile", variant: "error" });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyProfile]);
 
   async function handleSave() {
     setSaving(true);

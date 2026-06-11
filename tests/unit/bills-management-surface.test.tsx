@@ -55,4 +55,18 @@ describe("BillsManagementSurface", () => {
     expect(within(dialog).getByText("Production workloads")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: /edit/i })).toBeInTheDocument();
   });
+
+  it("opens an initial bill dialog when selected from workspace context", async () => {
+    render(
+      <BillsManagementSurface
+        bills={bills}
+        onBillCreated={vi.fn()}
+        onBillsChanged={vi.fn()}
+        initialSelectedBillId="bill-2"
+      />
+    );
+
+    const dialog = await screen.findByRole("dialog", { name: "Figma" });
+    expect(within(dialog).getByText("Figma Inc.")).toBeInTheDocument();
+  });
 });

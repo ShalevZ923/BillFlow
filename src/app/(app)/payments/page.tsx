@@ -7,6 +7,22 @@ import { PaymentHistoryTable, type PaymentRecord } from "@/components/payments/p
 import { Loader2 } from "lucide-react";
 import { getPayments } from "./actions";
 
+type PaymentActionRecord = Awaited<ReturnType<typeof getPayments>>[number];
+
+function toPaymentRecord(payment: PaymentActionRecord): PaymentRecord {
+  return {
+    id: payment.id,
+    billName: payment.billName,
+    category: payment.category,
+    paidAmountCents: payment.paidAmountCents,
+    paidCurrency: payment.paidCurrency,
+    paidDate: payment.paidDate,
+    method: payment.method,
+    note: payment.note,
+    status: payment.status
+  };
+}
+
 export default function PaymentsPage() {
   const router = useRouter();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -18,19 +34,7 @@ export default function PaymentsPage() {
     setError(null);
     try {
       const data = await getPayments();
-      setPayments(
-        data.map((d) => ({
-          id: d.id,
-          billName: d.billName,
-          category: d.category,
-          paidAmountCents: d.paidAmountCents,
-          paidCurrency: d.paidCurrency,
-          paidDate: d.paidDate,
-          method: d.method,
-          note: d.note,
-          status: d.status
-        }))
-      );
+      setPayments(data.map(toPaymentRecord));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load payments");
     } finally {
@@ -39,8 +43,29 @@ export default function PaymentsPage() {
   }, []);
 
   useEffect(() => {
-    loadPayments();
-  }, [loadPayments]);
+    let cancelled = false;
+
+    void getPayments()
+      .then((data) => {
+        if (!cancelled) {
+          setPayments(data.map(toPaymentRecord));
+        }
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load payments");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handlePaymentRecorded(payment: PaymentRecord) {
     setPayments((prev) => [payment, ...prev]);

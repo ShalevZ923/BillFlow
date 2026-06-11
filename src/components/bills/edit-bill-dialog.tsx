@@ -10,7 +10,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { updateBill, deleteBill } from "@/app/(app)/bills/[id]/actions";
+import { updateBill, deleteBill } from "@/app/(app)/bills/actions";
 import type { BillData } from "@/app/(app)/bills/actions";
 
 function formatCents(c: number): string {

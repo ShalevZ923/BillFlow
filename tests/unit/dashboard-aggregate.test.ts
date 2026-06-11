@@ -34,6 +34,118 @@ describe("buildDashboardPayload", () => {
     expect(payload.upcoming30Days.map((item) => item.name)).toEqual(["Office Rent", "GitHub Teams"]);
   });
 
+  it("builds a workflow due queue with overdue, due-today, and due-soon bills", () => {
+    const payload = buildDashboardPayload({
+      today: "2026-05-29",
+      dashboardCurrency: "USD",
+      rates,
+      bills: [
+        {
+          id: "bill-overdue",
+          name: "Past Due Hosting",
+          vendor: "Vercel",
+          category: "Cloud",
+          priority: "critical",
+          tags: ["infra"]
+        },
+        {
+          id: "bill-today",
+          name: "Office Rent",
+          vendor: "Landlord",
+          category: "Rent",
+          priority: "high",
+          tags: ["office"]
+        },
+        {
+          id: "bill-soon",
+          name: "GitHub Teams",
+          vendor: "GitHub",
+          category: "SaaS",
+          priority: "medium",
+          tags: ["dev"]
+        },
+        {
+          id: "bill-later",
+          name: "Annual Insurance",
+          vendor: "Carrier",
+          category: "Insurance",
+          priority: "low",
+          tags: []
+        }
+      ],
+      occurrences: [
+        {
+          id: "occ-overdue",
+          billId: "bill-overdue",
+          dueDate: "2026-05-20",
+          amountCents: 12000,
+          currency: "USD",
+          status: "overdue"
+        },
+        {
+          id: "occ-today",
+          billId: "bill-today",
+          dueDate: "2026-05-29",
+          amountCents: 280000,
+          currency: "USD",
+          status: "unpaid"
+        },
+        {
+          id: "occ-soon",
+          billId: "bill-soon",
+          dueDate: "2026-06-03",
+          amountCents: 8400,
+          currency: "USD",
+          status: "unpaid"
+        },
+        {
+          id: "occ-later",
+          billId: "bill-later",
+          dueDate: "2026-08-01",
+          amountCents: 50000,
+          currency: "USD",
+          status: "unpaid"
+        }
+      ]
+    });
+
+    expect(payload.summary.dueThisWeekCount).toBe(2);
+    expect(payload.dueQueue.map((item) => item.id)).toEqual(["occ-overdue", "occ-today", "occ-soon"]);
+    expect(payload.dueQueue[0]).toMatchObject({
+      name: "Past Due Hosting",
+      vendor: "Vercel",
+      category: "Cloud",
+      priority: "critical",
+      daysUntilDue: -9
+    });
+  });
+
+  it("calculates paid month-to-date from payment records in the dashboard currency", () => {
+    const payload = buildDashboardPayload({
+      today: "2026-05-29",
+      dashboardCurrency: "USD",
+      rates,
+      bills: [{ id: "bill-1", name: "Paid Bill", category: "Other", priority: "low", tags: [] }],
+      occurrences: [],
+      payments: [
+        {
+          id: "payment-current-month",
+          paidAmountCents: 9000,
+          paidCurrency: "EUR",
+          paidDate: "2026-05-12"
+        },
+        {
+          id: "payment-last-month",
+          paidAmountCents: 5000,
+          paidCurrency: "USD",
+          paidDate: "2026-04-30"
+        }
+      ]
+    });
+
+    expect(payload.summary.paidMonthToDateCents).toBe(10000);
+  });
+
   it("converts amounts to the dashboard currency", () => {
     const payload = buildDashboardPayload({
       today: "2026-05-29",

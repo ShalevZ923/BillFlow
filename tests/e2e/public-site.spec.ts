@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test("public site exposes product, pricing, and signup paths", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Every bill, under control." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bills stop being surprises." })).toBeVisible();
+  await expect(page.getByText("Operational bill control")).toBeVisible();
   await expect(page.getByRole("link", { name: "Pricing" }).first()).toBeVisible();
 
   await page.getByRole("link", { name: "Pricing" }).first().click();

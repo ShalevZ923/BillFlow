@@ -1,13 +1,14 @@
 import { parseISO, differenceInDays, isBefore, isAfter, addDays } from "date-fns";
-import type { CurrencyCode, OccurrenceStatus } from "@/lib/billing/types";
+import type { BillPriority, CurrencyCode, OccurrenceStatus } from "@/lib/billing/types";
 import type { ExchangeRates } from "@/lib/currency/conversion";
 import { convertAmount } from "@/lib/currency/conversion";
 
 export type DashboardBillMeta = {
   id: string;
   name: string;
+  vendor?: string;
   category: string;
-  priority: string;
+  priority: BillPriority | string;
   tags: string[];
   cycle?: string;
 };
@@ -21,6 +22,13 @@ export type DashboardOccurrence = {
   status: OccurrenceStatus;
 };
 
+export type DashboardPayment = {
+  id: string;
+  paidAmountCents: number;
+  paidCurrency: CurrencyCode;
+  paidDate: string;
+};
+
 export type DashboardPayload = {
   summary: {
     monthlyObligationsCents: number;
@@ -29,6 +37,8 @@ export type DashboardPayload = {
     pendingAmountCents: number;
     overdueCount: number;
     overdueAmountCents: number;
+    dueThisWeekCount: number;
+    paidMonthToDateCents: number;
   };
   categoryTotals: Array<{ category: string; amountCents: number }>;
   monthlyBreakdown: Array<{ month: string; amountCents: number }>;
@@ -36,6 +46,20 @@ export type DashboardPayload = {
     id: string;
     billId: string;
     name: string;
+    dueDate: string;
+    amountCents: number;
+    currency: CurrencyCode;
+    status: OccurrenceStatus;
+    daysUntilDue: number;
+  }>;
+  dueQueue: Array<{
+    id: string;
+    billId: string;
+    name: string;
+    vendor: string;
+    category: string;
+    priority: BillPriority | string;
+    tags: string[];
     dueDate: string;
     amountCents: number;
     currency: CurrencyCode;
@@ -63,6 +87,7 @@ export function buildDashboardPayload(input: {
   rates: ExchangeRates;
   bills: DashboardBillMeta[];
   occurrences: DashboardOccurrence[];
+  payments?: DashboardPayment[];
 }): DashboardPayload {
   const billMap = new Map(input.bills.map((b) => [b.id, b]));
   const todayDate = parseISO(input.today);
@@ -74,12 +99,15 @@ export function buildDashboardPayload(input: {
   let pendingAmountCents = 0;
   let overdueCount = 0;
   let overdueAmountCents = 0;
+  let dueThisWeekCount = 0;
+  let paidMonthToDateCents = 0;
 
   const currentMonthKey = todayDate.toISOString().slice(0, 7);
 
   const categoryTotalsMap = new Map<string, number>();
   const monthlyBreakdownMap = new Map<string, number>();
   const upcomingList: DashboardPayload["upcoming30Days"] = [];
+  const dueQueue: DashboardPayload["dueQueue"] = [];
 
   for (const occurrence of input.occurrences) {
     const bill = billMap.get(occurrence.billId);
@@ -115,11 +143,32 @@ export function buildDashboardPayload(input: {
       monthlyBreakdownMap.set(monthKey, (monthlyBreakdownMap.get(monthKey) ?? 0) + converted);
     }
 
-    if (
-      (occurrence.status === "unpaid" || occurrence.status === "overdue") &&
-      isAfter(dueDate, todayDate) &&
-      isBefore(dueDate, thirtyDaysOut)
-    ) {
+    const isOpenOccurrence = occurrence.status === "unpaid" || occurrence.status === "overdue";
+    const daysUntilDue = differenceInDays(dueDate, todayDate);
+    const isWithinNextThirtyDays = !isAfter(dueDate, thirtyDaysOut);
+
+    if (isOpenOccurrence && daysUntilDue >= 0 && daysUntilDue <= 7) {
+      dueThisWeekCount++;
+    }
+
+    if (isOpenOccurrence && isWithinNextThirtyDays) {
+      dueQueue.push({
+        id: occurrence.id,
+        billId: occurrence.billId,
+        name: bill?.name ?? "Unknown",
+        vendor: bill?.vendor ?? "",
+        category: bill?.category ?? "Other",
+        priority: bill?.priority ?? "medium",
+        tags: bill?.tags ?? [],
+        dueDate: occurrence.dueDate,
+        amountCents: converted,
+        currency: input.dashboardCurrency,
+        status: occurrence.status,
+        daysUntilDue
+      });
+    }
+
+    if (isOpenOccurrence && isAfter(dueDate, todayDate) && isBefore(dueDate, thirtyDaysOut)) {
       upcomingList.push({
         id: occurrence.id,
         billId: occurrence.billId,
@@ -128,12 +177,30 @@ export function buildDashboardPayload(input: {
         amountCents: converted,
         currency: input.dashboardCurrency,
         status: occurrence.status,
-        daysUntilDue: differenceInDays(dueDate, todayDate)
+        daysUntilDue
       });
     }
   }
 
   upcomingList.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+  dueQueue.sort((a, b) => {
+    if (a.daysUntilDue !== b.daysUntilDue) return a.daysUntilDue - b.daysUntilDue;
+    return a.name.localeCompare(b.name);
+  });
+
+  for (const payment of input.payments ?? []) {
+    const paidDate = parseISO(payment.paidDate);
+    const paidMonthKey = paidDate.toISOString().slice(0, 7);
+
+    if (paidMonthKey === currentMonthKey && !isAfter(paidDate, todayDate)) {
+      paidMonthToDateCents += convertAmount({
+        amountCents: payment.paidAmountCents,
+        from: payment.paidCurrency,
+        to: input.dashboardCurrency,
+        rates: input.rates
+      });
+    }
+  }
 
   return {
     summary: {
@@ -142,7 +209,9 @@ export function buildDashboardPayload(input: {
       pendingCount,
       pendingAmountCents,
       overdueCount,
-      overdueAmountCents
+      overdueAmountCents,
+      dueThisWeekCount,
+      paidMonthToDateCents
     },
     categoryTotals: Array.from(categoryTotalsMap.entries())
       .map(([category, amountCents]) => ({ category, amountCents }))
@@ -150,6 +219,7 @@ export function buildDashboardPayload(input: {
     monthlyBreakdown: Array.from(monthlyBreakdownMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([month, amountCents]) => ({ month, amountCents })),
-    upcoming30Days: upcomingList
+    upcoming30Days: upcomingList,
+    dueQueue
   };
 }

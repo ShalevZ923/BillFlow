@@ -4,6 +4,8 @@ test("login page renders form with email and password", async ({ page }) => {
   await page.goto("/login");
 
   await expect(page.getByText("Log in to BillFlow")).toBeVisible();
+  await expect(page.getByText("Your bill command center is waiting")).toBeVisible();
+  await expect(page.getByText("Overdue review")).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(page.getByRole("button", { name: "Log in" }).first()).toBeVisible();
@@ -14,6 +16,8 @@ test("signup page renders form with email and password", async ({ page }) => {
   await page.goto("/signup");
 
   await expect(page.getByText("Create your account")).toBeVisible();
+  await expect(page.getByText("Start with a cleaner bill workflow")).toBeVisible();
+  await expect(page.getByText("Import-ready")).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();

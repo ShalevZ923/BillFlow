@@ -1,6 +1,5 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { profiles, bills, billOccurrences } from "@/db/schema";

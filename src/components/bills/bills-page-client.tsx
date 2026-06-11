@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BillsManagementSurface } from "@/components/bills/bills-management-surface";
 import type { BillListItem } from "@/components/bills/bill-list";
 import { getBills, type BillData } from "@/app/(app)/bills/actions";
 
 type BillsPageClientProps = {
   initialBills: BillData[];
+  initialSelectedBillId?: string | null;
 };
 
-export function BillsPageClient({ initialBills }: BillsPageClientProps) {
+export function BillsPageClient({ initialBills, initialSelectedBillId = null }: BillsPageClientProps) {
+  const router = useRouter();
   const [bills, setBills] = useState(initialBills);
 
   const refreshBills = useCallback(async () => {
@@ -36,11 +39,20 @@ export function BillsPageClient({ initialBills }: BillsPageClientProps) {
     setBills((prev) => [newBill, ...prev]);
   }, []);
 
+  const handleSelectedBillClosed = useCallback(() => {
+    if (initialSelectedBillId) {
+      router.replace("/bills");
+    }
+  }, [initialSelectedBillId, router]);
+
   return (
     <BillsManagementSurface
+      key={initialSelectedBillId ?? "all-bills"}
       bills={bills}
       onBillCreated={handleBillCreated}
       onBillsChanged={refreshBills}
+      initialSelectedBillId={initialSelectedBillId}
+      onSelectedBillClosed={handleSelectedBillClosed}
     />
   );
 }

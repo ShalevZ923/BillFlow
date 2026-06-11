@@ -1,55 +1,33 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload, Globe, Calculator, Check, AlertTriangle } from "lucide-react";
-import { SummaryCards } from "@/components/dashboard/summary-cards";
-import { CategoryChart } from "@/components/dashboard/category-chart";
-import { MonthlyBreakdown } from "@/components/dashboard/monthly-breakdown";
-import { UpcomingList } from "@/components/dashboard/upcoming-list";
-import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
-import { AiInsightCard } from "@/components/dashboard/ai-insight-card";
-import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
-import { BillList, type BillListItem } from "@/components/bills/bill-list";
+import { AlertTriangle } from "lucide-react";
 import { CreateBillDialog } from "@/components/bills/create-bill-dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { BillListItem } from "@/components/bills/bill-list";
+import { DashboardCurrencySelector } from "@/components/currency/dashboard-currency-selector";
+import { DashboardModuleLayout } from "@/components/dashboard/modules/dashboard-module-layout";
+import type { DashboardActivityItem } from "@/components/dashboard/modules/types";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { OccurrenceStatus, BillPriority, CurrencyCode } from "@/lib/billing/types";
-import { buildDashboardPayload } from "@/lib/dashboard/aggregate";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { BillPriority, CurrencyCode, OccurrenceStatus } from "@/lib/billing/types";
+import { deriveBillStatus, selectPrimaryOccurrence } from "@/lib/billing/status";
 import type { ExchangeRates } from "@/lib/currency/conversion";
+import { buildDashboardPayload } from "@/lib/dashboard/aggregate";
+import {
+  filterBillItemsByPeriod,
+  filterDashboardDataByPeriod,
+  isDateInDashboardPeriod,
+  type DashboardPeriod
+} from "@/lib/dashboard/period";
 import { getDashboardData } from "./actions";
 import type {
   DashboardBillData,
+  DashboardData,
   DashboardOccurrenceData,
   DashboardPaymentData
 } from "./actions";
-
-function filterBillsByPeriod(bills: BillListItem[], period: string): BillListItem[] {
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const currentYear = `${now.getFullYear()}`;
-  switch (period) {
-    case "month":
-      return bills.filter((bill) => bill.dueDate.startsWith(currentMonth));
-    case "year":
-      return bills.filter((bill) => bill.dueDate.startsWith(currentYear));
-    default:
-      return bills;
-  }
-}
-
-function formatCurrency(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
-type FilterState = {
-  search: string;
-  status: OccurrenceStatus | null;
-  category: string | null;
-  tag: string | null;
-  priority: BillPriority | null;
-};
 
 const defaultRates: ExchangeRates = {
   base: "USD",
@@ -57,42 +35,35 @@ const defaultRates: ExchangeRates = {
   rates: { USD: 1, EUR: 1, GBP: 1, ILS: 1 }
 };
 
-const statusPriority: Record<string, number> = {
-  overdue: 0,
-  unpaid: 1,
-  paid: 2,
-  skipped: 3
-};
-
 function deriveBillListItems(
   bills: DashboardBillData[],
-  occurrences: DashboardOccurrenceData[]
+  occurrences: DashboardOccurrenceData[],
+  today: string
 ): BillListItem[] {
   const occurrencesByBill = new Map<string, DashboardOccurrenceData[]>();
-  for (const occ of occurrences) {
-    const arr = occurrencesByBill.get(occ.billId) ?? [];
-    arr.push(occ);
-    occurrencesByBill.set(occ.billId, arr);
+
+  for (const occurrence of occurrences) {
+    const billOccurrences = occurrencesByBill.get(occurrence.billId) ?? [];
+    billOccurrences.push(occurrence);
+    occurrencesByBill.set(occurrence.billId, billOccurrences);
   }
 
   return bills.map((bill) => {
-    const occs = occurrencesByBill.get(bill.id) ?? [];
-    const sorted = [...occs].sort((a, b) => {
-      const spDiff = (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99);
-      if (spDiff !== 0) return spDiff;
-      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-    });
-    const primary = sorted[0];
+    const typedOccurrences = (occurrencesByBill.get(bill.id) ?? []).map((occurrence) => ({
+      ...occurrence,
+      status: occurrence.status as OccurrenceStatus
+    }));
+    const primary = selectPrimaryOccurrence(typedOccurrences, today);
 
     return {
       id: bill.id,
       name: bill.name,
       amountCents: primary?.amountCents ?? 0,
       currency: primary?.currency ?? "USD",
-      dueDate: primary?.dueDate ?? new Date().toISOString().slice(0, 10),
+      dueDate: primary?.dueDate ?? today,
       category: bill.category,
       priority: bill.priority as BillPriority,
-      status: (primary?.status ?? "unpaid") as OccurrenceStatus,
+      status: deriveBillStatus(typedOccurrences, today),
       tags: bill.tags,
       vendor: bill.vendor ?? "",
       cycle: bill.cycle ?? "monthly",
@@ -105,279 +76,250 @@ function deriveActivity(
   bills: DashboardBillData[],
   occurrences: DashboardOccurrenceData[],
   payments: DashboardPaymentData[]
-) {
-  const billMap = new Map(bills.map((b) => [b.id, b]));
-  const occMap = new Map(occurrences.map((o) => [o.id, o]));
-
-  const activities: Array<{
-    id: string;
-    action: string;
-    billName: string;
-    amountCents: number;
-    date: string;
-  }> = [];
+): DashboardActivityItem[] {
+  const billMap = new Map(bills.map((bill) => [bill.id, bill]));
+  const occurrenceMap = new Map(occurrences.map((occurrence) => [occurrence.id, occurrence]));
+  const activities: DashboardActivityItem[] = [];
 
   for (const payment of payments) {
-    const occ = occMap.get(payment.occurrenceId);
-    const bill = occ ? billMap.get(occ.billId) : undefined;
+    const occurrence = occurrenceMap.get(payment.occurrenceId);
+    const bill = occurrence ? billMap.get(occurrence.billId) : undefined;
+
     activities.push({
       id: payment.id,
       action: "paid",
-      billName: bill?.name ?? "Unknown",
+      billName: bill?.name ?? "Unknown bill",
       amountCents: payment.paidAmountCents,
       date: payment.paidDate
     });
   }
 
-  for (const occ of occurrences) {
-    if (occ.status === "overdue") {
-      const bill = billMap.get(occ.billId);
-      activities.push({
-        id: `overdue-${occ.id}`,
-        action: "overdue",
-        billName: bill?.name ?? "Unknown",
-        amountCents: occ.amountCents,
-        date: occ.dueDate
-      });
-    }
+  for (const occurrence of occurrences) {
+    if (occurrence.status !== "overdue") continue;
+
+    const bill = billMap.get(occurrence.billId);
+    activities.push({
+      id: `overdue-${occurrence.id}`,
+      action: "overdue",
+      billName: bill?.name ?? "Unknown bill",
+      amountCents: occurrence.amountCents,
+      date: occurrence.dueDate
+    });
   }
 
   return activities.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 }
 
-const activityIcons: Record<string, React.ReactNode> = {
-  paid: <Check size={14} />,
-  added: <Plus size={14} />,
-  imported: <Upload size={14} />,
-  overdue: <AlertTriangle size={14} />
-};
-
-const activityColors: Record<string, string> = {
-  paid: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
-  added: "bg-primary/10 text-primary",
-  imported: "bg-primary/10 text-primary",
-  overdue: "bg-destructive/10 text-destructive"
-};
+function DashboardLoadingState() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="mt-2 h-5 w-72" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+      </div>
+      <Skeleton className="h-9 w-72" />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[1, 2, 3, 4].map((item) => (
+          <Skeleton key={item} className="h-28 rounded-lg" />
+        ))}
+      </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <Skeleton className="h-96 rounded-lg" />
+        <Skeleton className="h-96 rounded-lg" />
+      </div>
+    </div>
+  );
+}
 
 export function DashboardContent() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [rawData, setRawData] = useState<{
-    bills: DashboardBillData[];
-    occurrences: DashboardOccurrenceData[];
-    payments: DashboardPaymentData[];
-    rates: ExchangeRates | null;
-    userProfile: { name: string; email: string; defaultCurrency: CurrencyCode; onboardingCompleted: boolean };
-  } | null>(null);
+  const [rawData, setRawData] = useState<DashboardData | null>(null);
+  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [period, setPeriod] = useState<DashboardPeriod>("overview");
 
-  const [searchLoading, setSearchLoading] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const applyDashboardData = useCallback((data: DashboardData) => {
+    setRawData(data);
+    setCurrency(data.userProfile.defaultCurrency);
+  }, []);
 
-  const [currency, setCurrency] = useState("USD");
-  const [period, setPeriod] = useState("overview");
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    status: null,
-    category: null,
-    tag: null,
-    priority: null
-  });
-
-  const router = useRouter();
-
-  const fetchData = useCallback(async (searchQuery?: string) => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const data = await getDashboardData(searchQuery);
-      setRawData(data);
-      setCurrency(data.userProfile.defaultCurrency);
+      const data = await getDashboardData();
+      applyDashboardData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
       setLoading(false);
-      setSearchLoading(false);
     }
-  }, []);
+  }, [applyDashboardData]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    let cancelled = false;
 
-  useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    if (!filters.search.trim()) {
-      fetchData();
-      return;
-    }
-
-    setSearchLoading(true);
-    debounceRef.current = setTimeout(() => {
-      fetchData(filters.search);
-    }, 300);
+    void getDashboardData()
+      .then((data) => {
+        if (!cancelled) {
+          applyDashboardData(data);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      cancelled = true;
     };
-  }, [filters.search, fetchData]);
+  }, [applyDashboardData]);
 
-  const dashboardPayload = useMemo(() => {
-    if (!rawData) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    const rates = rawData.rates ?? defaultRates;
-    return buildDashboardPayload({
-      today,
-      dashboardCurrency: currency as CurrencyCode,
-      rates,
-      bills: rawData.bills.map((b) => ({
-        id: b.id,
-        name: b.name,
-        category: b.category,
-        priority: b.priority,
-        tags: b.tags,
-        cycle: b.cycle
-      })),
-      occurrences: rawData.occurrences.map((o) => ({
-        id: o.id,
-        billId: o.billId,
-        dueDate: o.dueDate,
-        amountCents: o.amountCents,
-        currency: o.currency,
-        status: o.status as OccurrenceStatus
-      }))
-    });
-  }, [rawData, currency]);
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      }),
+    []
+  );
 
   const billListItems = useMemo(() => {
     if (!rawData) return [];
-    return deriveBillListItems(rawData.bills, rawData.occurrences);
-  }, [rawData]);
+    return deriveBillListItems(rawData.bills, rawData.occurrences, todayIso);
+  }, [rawData, todayIso]);
+
+  const periodBills = useMemo(
+    () => filterBillItemsByPeriod(billListItems, period, todayIso),
+    [billListItems, period, todayIso]
+  );
+
+  const dashboardPayload = useMemo(() => {
+    if (!rawData) return null;
+
+    const rates = rawData.rates ?? defaultRates;
+    const bills = rawData.bills.map((bill) => ({
+      id: bill.id,
+      name: bill.name,
+      vendor: bill.vendor,
+      category: bill.category,
+      priority: bill.priority as BillPriority,
+      tags: bill.tags,
+      cycle: bill.cycle
+    }));
+    const occurrences = rawData.occurrences.map((occurrence) => ({
+      id: occurrence.id,
+      billId: occurrence.billId,
+      dueDate: occurrence.dueDate,
+      amountCents: occurrence.amountCents,
+      currency: occurrence.currency,
+      status: occurrence.status as OccurrenceStatus
+    }));
+    const periodData = filterDashboardDataByPeriod({
+      bills,
+      occurrences,
+      period,
+      today: todayIso
+    });
+    const payments = rawData.payments
+      .filter((payment) => isDateInDashboardPeriod(payment.paidDate, period, todayIso))
+      .map((payment) => ({
+        id: payment.id,
+        paidAmountCents: payment.paidAmountCents,
+        paidCurrency: payment.paidCurrency as CurrencyCode,
+        paidDate: payment.paidDate
+      }));
+
+    return buildDashboardPayload({
+      today: todayIso,
+      dashboardCurrency: currency,
+      rates,
+      bills: periodData.bills,
+      occurrences: periodData.occurrences,
+      payments
+    });
+  }, [currency, period, rawData, todayIso]);
 
   const activityItems = useMemo(() => {
     if (!rawData) return [];
-    return deriveActivity(rawData.bills, rawData.occurrences, rawData.payments);
-  }, [rawData]);
 
-  const categories = useMemo(
-    () => [...new Set(billListItems.map((b) => b.category))],
-    [billListItems]
-  );
-  const tags = useMemo(
-    () => [...new Set(billListItems.flatMap((b) => b.tags))],
-    [billListItems]
-  );
+    return deriveActivity(
+      rawData.bills,
+      rawData.occurrences.filter((occurrence) => isDateInDashboardPeriod(occurrence.dueDate, period, todayIso)),
+      rawData.payments.filter((payment) => isDateInDashboardPeriod(payment.paidDate, period, todayIso))
+    );
+  }, [period, rawData, todayIso]);
 
-  const nonSearchFiltered = useMemo(() => {
-    return billListItems.filter((bill) => {
-      if (filters.status && bill.status !== filters.status) return false;
-      if (filters.category && bill.category !== filters.category) return false;
-      if (filters.tag && !bill.tags.includes(filters.tag)) return false;
-      if (filters.priority && bill.priority !== filters.priority) return false;
-      return true;
-    });
-  }, [billListItems, filters.status, filters.category, filters.tag, filters.priority]);
+  const moduleContext = useMemo(() => {
+    if (!dashboardPayload) return null;
 
-  const periodFiltered = useMemo(
-    () => filterBillsByPeriod(nonSearchFiltered, period),
-    [nonSearchFiltered, period]
-  );
-
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-
-  function handleBillCreated() {
-    fetchData();
-  }
+    return {
+      payload: dashboardPayload,
+      bills: periodBills,
+      activityItems,
+      currency,
+      onNavigate: (href: string) => router.push(href),
+      onOpenBill: (billId: string) => router.push(`/bills?bill=${encodeURIComponent(billId)}`),
+      onRefresh: fetchData
+    };
+  }, [activityItems, currency, dashboardPayload, fetchData, periodBills, router]);
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="mt-1 h-5 w-72" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-9 w-[100px]" />
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-20 rounded-md" />
-          <Skeleton className="h-9 w-24 rounded-md" />
-          <Skeleton className="h-9 w-20 rounded-md" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
-          ))}
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-80 w-full rounded-xl" />
-            <Skeleton className="h-80 w-full rounded-xl" />
-          </div>
-          <div className="space-y-6">
-            <Skeleton className="h-80 w-full rounded-xl" />
-            <Skeleton className="h-44 w-full rounded-xl" />
-          </div>
-        </div>
-
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-40 w-full rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <DashboardLoadingState />;
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
         <div className="text-center">
-          <AlertTriangle size={40} className="mx-auto mb-3 text-destructive" />
+          <AlertTriangle className="mx-auto mb-3 text-destructive" />
           <p className="text-lg font-semibold text-destructive">Failed to load dashboard data</p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
         </div>
-        <Button variant="outline" onClick={() => fetchData()}>
+        <Button variant="outline" onClick={fetchData}>
           Retry
         </Button>
       </div>
     );
   }
 
+  if (!rawData || !moduleContext) {
+    return null;
+  }
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Welcome back, {rawData?.userProfile.name.split(" ")[0] ?? "User"}
+            Welcome back, {rawData.userProfile.name.split(" ")[0] || "User"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{today}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{todayLabel}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <CreateBillDialog onBillCreated={handleBillCreated} />
-          <DashboardCurrencySelector value={currency} onChange={setCurrency} />
+        <div className="flex flex-wrap items-center gap-2">
+          <CreateBillDialog onBillCreated={fetchData} />
+          <DashboardCurrencySelector value={currency} onChange={(value) => setCurrency(value as CurrencyCode)} />
         </div>
       </div>
 
-      {/* Period Tabs */}
-      <Tabs value={period} onValueChange={setPeriod} className="mb-6">
+      <Tabs value={period} onValueChange={(value) => setPeriod(value as DashboardPeriod)}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="month">This Month</TabsTrigger>
@@ -385,111 +327,7 @@ export function DashboardContent() {
         </TabsList>
       </Tabs>
 
-      {/* Summary Cards */}
-      <SummaryCards
-        monthlyObligationsCents={dashboardPayload?.summary.monthlyObligationsCents ?? 0}
-        yearlyProjectionCents={dashboardPayload?.summary.yearlyProjectionCents ?? 0}
-        pendingCount={dashboardPayload?.summary.pendingCount ?? 0}
-        pendingAmountCents={dashboardPayload?.summary.pendingAmountCents ?? 0}
-        overdueCount={dashboardPayload?.summary.overdueCount ?? 0}
-        overdueAmountCents={dashboardPayload?.summary.overdueAmountCents ?? 0}
-      />
-
-      {/* Charts + Upcoming + Quick Actions */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <MonthlyBreakdown
-            monthlyBreakdown={dashboardPayload?.monthlyBreakdown ?? []}
-          />
-          <CategoryChart
-            categoryTotals={dashboardPayload?.categoryTotals ?? []}
-          />
-        </div>
-
-        <div className="space-y-6">
-          <UpcomingList items={dashboardPayload?.upcoming30Days ?? []} />
-
-          {/* Quick Actions */}
-          <div className="rounded-xl border border-border bg-white p-5 shadow-sm dark:bg-card">
-            <h3 className="text-sm font-semibold mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { icon: Plus, label: "Add Bill", href: "/bills" },
-                { icon: Upload, label: "Import", href: "/import-export" },
-                { icon: Globe, label: "Convert", href: "/currency" },
-                { icon: Calculator, label: "Calculate", href: "/calculator" }
-              ].map((action) => (
-                <button
-                  key={action.label}
-                  onClick={() => router.push(action.href)}
-                  className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-background p-3 text-xs font-medium transition hover:bg-muted hover:border-primary/30 dark:bg-muted/20"
-                >
-                  <action.icon size={16} className="text-primary" />
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <AiInsightCard plan="free" />
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mt-6 rounded-xl border border-border bg-white p-5 shadow-sm dark:bg-card">
-        <h3 className="text-sm font-semibold mb-3">Recent Activity</h3>
-        <div className="space-y-1">
-          {activityItems.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No recent activity
-            </p>
-          ) : (
-            activityItems.map((act) => (
-              <div
-                key={act.id}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-muted/50"
-              >
-                <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${activityColors[act.action] ?? "bg-muted text-muted-foreground"}`}
-                >
-                  {activityIcons[act.action] ?? <Check size={14} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium">{act.billName}</span>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    was {act.action}
-                    {act.amountCents > 0 && ` — ${formatCurrency(act.amountCents)}`}
-                  </span>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{act.date}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Bill List */}
-      <div className="mt-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">All Bills</h2>
-        </div>
-        <DashboardFilters
-          filters={filters}
-          categories={categories}
-          tags={tags}
-          onFilterChange={setFilters}
-          searchLoading={searchLoading}
-        />
-        <div className="mt-4">
-          <BillList
-            bills={periodFiltered}
-            searchQuery={filters.search}
-            emptyStateText="Add your first bill to turn the dashboard into a useful financial picture."
-            onChange={fetchData}
-          />
-        </div>
-      </div>
+      <DashboardModuleLayout context={moduleContext} />
     </div>
   );
 }

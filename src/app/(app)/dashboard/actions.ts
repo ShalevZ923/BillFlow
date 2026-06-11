@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, sql, and, gte } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createSupabaseServerClient } from "@/lib/auth/server";
 import { createDb } from "@/db/client";
 import { bills, billOccurrences, paymentRecords, exchangeRateSnapshots, profiles } from "@/db/schema";

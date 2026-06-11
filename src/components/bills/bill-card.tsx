@@ -3,11 +3,11 @@
 import { memo, useState, useCallback, useMemo } from "react";
 import { clsx } from "clsx";
 import { Calendar, Tag } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BillCardMenu } from "@/components/bills/bill-card-menu";
 import { EditBillDialog } from "@/components/bills/edit-bill-dialog";
+import { BillQuickManageDialog } from "@/components/bills/bill-quick-manage-dialog";
 import type { OccurrenceStatus, BillPriority } from "@/lib/billing/types";
 import { currencyOptions } from "@/lib/currency/supported";
 import type { BillData } from "@/app/(app)/bills/actions";
@@ -82,6 +82,7 @@ export const BillCard = memo(function BillCard({
   notes,
   onChange
 }: BillCardProps) {
+  const [detailOpen, setDetailOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"edit" | "delete">("edit");
 
@@ -98,10 +99,27 @@ export const BillCard = memo(function BillCard({
     onChange?.();
   }, [onChange]);
 
+  const openEdit = useCallback(() => {
+    setDetailOpen(false);
+    setDialogMode("edit");
+    setEditOpen(true);
+  }, []);
+
+  const openDelete = useCallback(() => {
+    setDetailOpen(false);
+    setDialogMode("delete");
+    setEditOpen(true);
+  }, []);
+
   return (
     <>
       <Card className="relative transition hover:shadow-sm hover:border-primary/30 group">
-        <Link href={`/bills/${id}`} className="block">
+        <button
+          type="button"
+          aria-label={`Open ${name} details`}
+          onClick={() => setDetailOpen(true)}
+          className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
           <CardContent>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -141,15 +159,22 @@ export const BillCard = memo(function BillCard({
               </div>
             )}
           </CardContent>
-        </Link>
+        </button>
 
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <BillCardMenu
-            onEdit={() => { setDialogMode("edit"); setEditOpen(true); }}
-            onDelete={() => { setDialogMode("delete"); setEditOpen(true); }}
+            onEdit={openEdit}
+            onDelete={openDelete}
           />
         </div>
       </Card>
+
+      <BillQuickManageDialog
+        bill={detailOpen ? billData : null}
+        onOpenChange={(open) => setDetailOpen(open)}
+        onEdit={openEdit}
+        onDelete={openDelete}
+      />
 
       <EditBillDialog
         bill={billData}

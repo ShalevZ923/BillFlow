@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { AuthShell } from "@/components/public/auth-shell";
 import { loginAction, googleLoginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -22,11 +23,11 @@ export default function Login() {
   }, [state.success, router]);
 
   return (
-    <main className="flex min-h-[calc(100vh-72px)] items-center justify-center bg-background px-5">
-      <Card className="w-full max-w-sm">
+    <AuthShell variant="login">
+      <Card className="w-full border-border shadow-sm">
         <CardHeader>
           <CardTitle>Log in to BillFlow</CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">Welcome back</p>
+          <p className="mt-1 text-sm text-muted-foreground">Welcome back. Enter your details to continue.</p>
         </CardHeader>
         <CardContent>
           {state.error && (
@@ -77,7 +78,7 @@ export default function Login() {
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? (
                 <>
-                  <Loader2 className="animate-spin" />
+                  <Loader2 data-icon="inline-start" className="animate-spin" />
                   Logging in...
                 </>
               ) : (
@@ -102,7 +103,7 @@ export default function Login() {
             className="mt-4"
           >
             <Button type="submit" variant="outline" className="w-full">
-              <svg className="mr-2 size-4" viewBox="0 0 24 24">
+              <svg data-icon="inline-start" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -133,6 +134,6 @@ export default function Login() {
           </p>
         </CardFooter>
       </Card>
-    </main>
+    </AuthShell>
   );
 }
